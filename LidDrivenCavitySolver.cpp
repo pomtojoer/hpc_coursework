@@ -60,8 +60,8 @@ int main(int argc, char **argv)
     cout << endl;
     
     // Caclulating the grid spacing
-    const double dx = Lx / (Nx - 1);
-    const double dy = Ly / (Ny - 1);
+    const double dx = Lx / ((double) Nx - 1);
+    const double dy = Ly / ((double) Ny - 1);
     
     // Displaying grid spacing
     cout << "The grid space in the x-direction = " << dx << endl;
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     // Checking partitions match MPI......
     
     // Create a new instance of the LidDrivenCavity class
-     LidDrivenCavity* solver = new LidDrivenCavity();
+    LidDrivenCavity* solver = new LidDrivenCavity();
 
     // Configuring Solver
     solver->SetDomainSize(Lx,Ly);

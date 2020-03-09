@@ -27,22 +27,35 @@ public:
 private:
     double* v = nullptr;
     double* s = nullptr;
+    
+    // Given constants
+    const double U = 1.0;
 
+    // Defined parameters
     double dt;
     double T;
-    int    Nx;
-    int    Ny;
+    unsigned int Nx;
+    unsigned int Ny;
     double Lx;
     double Ly;
     double Re;
     
+    // Calculated parameters
     double dx;
     double dy;
     
+    // Discretised grids
     double* omega = nullptr;
     double* psi = nullptr;
     
-    void Update
+    // Additional constants
+    double udy;
+    int narr;
+    
+    void SetVorticityBoundaryConditions();
+    void SetInteriorVorticity();
+    void UpdateInteriorVorticity();
+    void SolvePoissonProblem();
 };
 
 #endif
