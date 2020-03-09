@@ -1,3 +1,5 @@
+#ifndef LIDDRIVENCAVITY_H
+#define LIDDRIVENCAVITY_H
 #pragma once
 
 #include <string>
@@ -14,10 +16,12 @@ public:
     void SetTimeStep(double deltat);
     void SetFinalTime(double finalt);
     void SetReynoldsNumber(double Re);
+    void SetGridSpacing(double deltax, double deltay);
 
     void Initialise();
     void Integrate();
-
+    
+    void PrintOmegaMatrix();
     // Add any other public functions
 
 private:
@@ -31,5 +35,14 @@ private:
     double Lx;
     double Ly;
     double Re;
+    
+    double dx;
+    double dy;
+    
+    double* omega = nullptr;
+    double* psi = nullptr;
+    
+    void Update
 };
 
+#endif
