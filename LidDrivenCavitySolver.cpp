@@ -72,7 +72,12 @@ int main(int argc, char **argv)
     // Checking the chosen timestep meets the stability restriction
     if (dt >= (Re*dx*dy/4)) {
         cout << "Re*dx*dy/4 = " << Re*dx*dy/4;
-        cout << "The time step chosen is too large. Please choose a time step such that dt < Re*dt*dx/4." << endl;
+        cout << "Error: The time step chosen is too large. Please choose a time step such that dt < Re*dt*dx/4." << endl;
+        return -1;
+    }
+    
+    if (Nx < 3 || Ny < 3) {
+        cout << "Error: The minimum number of discretisation in the x or y direction is 3. Please choose a value greater than or equal to this" << endl;
         return -1;
     }
     
@@ -84,7 +89,7 @@ int main(int argc, char **argv)
 //    // Initialise MPI.
 //    int err = MPI_Init(&argc, &argv);
 //    if (err != MPI_SUCCESS) {
-//        cout << "Failed to initialise MPI" << endl;
+//        cout << "Error: Failed to initialise MPI" << endl;
 //        return -1;
 //    }
 //

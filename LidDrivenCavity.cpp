@@ -18,6 +18,13 @@ void PrintMatrix(double* mat, int rows, int cols, bool isRowMajor) {
     cout << endl;
 }
 
+void printVector(double* vec, int n) {
+    cout << "The vector looks like: " << endl;
+    for (int i=0; i<n; i++) {
+        cout << vec[i] << endl;
+    }
+}
+
 LidDrivenCavity::LidDrivenCavity()
 {
 }
@@ -90,11 +97,11 @@ void LidDrivenCavity::Initialise()
     omegaTop = new double[interiorNx]{};
     omegaBottom = new double[interiorNx]{};
     
-    psiInterior = new double[interiorNarr]{};
-    psiRight = new double[interiorNy]{};
-    psiLeft = new double[interiorNy]{};
-    psiTop = new double[interiorNx]{};
-    psiBottom = new double[interiorNx]{};
+    psiInterior = new double[interiorNarr]{7,49,73,78,23,9,87,3,27};
+    psiRight = new double[interiorNy]{58,40,29};
+    psiLeft = new double[interiorNy]{30,65,40};
+    psiTop = new double[interiorNx]{72,92,12};
+    psiBottom = new double[interiorNx]{44,42,3};
     
     // Generating laplacian matrix
     SetSymmetricBandedLaplacianMatrix();
@@ -119,7 +126,6 @@ void LidDrivenCavity::SetSymmetricBandedLaplacianMatrix()
             symmetricBandedLaplacianMatrix[i*(interiorNy+1) + interiorNy] = -1*alpha;
         }
     }
-//    PrintMatrix(symmetricBandedLaplacianMatrix,interiorNy+1,interiorNarr,false);
 }
 
 
@@ -128,31 +134,22 @@ void LidDrivenCavity::SetVorticityBoundaryConditions()
     // Setting top bottom boundary conditions
     for (unsigned int i=0; i<interiorNx; i++) {
         // Setting the top BC
-        omegaTop[i] = (psiTop[i]-psiInterior[i+(interiorNy-2)*interiorNx])*2/dy/dy-udy;
+        omegaTop[i] = (psiTop[i]-psiInterior[(interiorNy-1)+i*interiorNy])*2/dy/dy-udy;
         // Setting the bottom BC
-        omegaBottom[i] = (psiBottom[i]-psiInterior[i+(1)*interiorNx])*2/dy/dy;
+        omegaBottom[i] = (psiBottom[i]-psiInterior[(0)+i*interiorNy])*2/dy/dy;
     }
     
     // Setting left right boundary conditions
-    for (unsigned int i=0; i<Ny; i++) {
+    for (unsigned int i=0; i<interiorNy; i++) {
         // Setting the left BC
-        omegaLeft[i] = (psiLeft[i]-psiInterior[i*interiorNx+1])*2/dx/dx;
+        omegaLeft[i] = (psiLeft[i]-psiInterior[i])*2/dx/dx;
         // Setting the right BC
-        omegaRight[i] = (psiRight[i]-psiInterior[i*interiorNx+(interiorNx-2)])*2/dx/dx;
+        omegaRight[i] = (psiRight[i]-psiInterior[i+(interiorNx-1)*interiorNy])*2/dx/dx;
     }
 }
 
 void LidDrivenCavity::SetInteriorVorticity()
 {
-    for (unsigned int i=0; i<interiorNx; i++) {
-        for (unsigned int j=0; j<interiorNy; j++) {
-            psiInterior[i*interiorNy + j] = rand()%100;
-        }
-        psiRight[i] = rand()%100;
-        psiLeft[i] = rand()%100;
-        psiTop[i] = rand()%100;
-        psiBottom[i] = rand()%100;
-    }
     PrintMatrix(psiInterior,interiorNy,interiorNx,false);
     PrintMatrix(psiRight,interiorNy,1,false);
     PrintMatrix(psiLeft,interiorNy,1,false);
@@ -168,16 +165,53 @@ void LidDrivenCavity::SetInteriorVorticity()
 
 void LidDrivenCavity::UpdateInteriorVorticity()
 {
-    double* term3 = new double[interiorNarr]();
+    double* t1 = new double[interiorNarr]{};
+    double* t4 = new double[interiorNarr]{};
+    double* term1 = new double[interiorNarr]{};
+    double* term3 = new double[interiorNarr]{};
     
+    // implementation of t1
+    // (psi(i+1,j) - psi(i-1,j))
+    cblas_dcopy(interiorNarr-interiorNy, psiInterior+interiorNy, 1, t1, 1);
+    cblas_daxpy(interiorNarr-interiorNy, -1.0, psiInterior, 1, t1+interiorNy, 1);
+    cblas_daxpy(interiorNy, -1.0, psiLeft, 1, t1, 1);
+    cblas_daxpy(interiorNy, 1.0, psiRight, 1, t1+(interiorNx-1)*interiorNy, 1);
+    
+    // implementation of t4
+    // (omega(i+1,j) - omega(i-1,j))
+    cblas_dcopy(interiorNarr-interiorNy, omegaInterior+interiorNy, 1, t4, 1);
+    cblas_daxpy(interiorNarr-interiorNy, -1.0, omegaInterior, 1, t4+interiorNy, 1);
+    cblas_daxpy(interiorNy, -1.0, omegaLeft, 1, t4, 1);
+    cblas_daxpy(interiorNy, 1.0, omegaRight, 1, t4+(interiorNx-1)*interiorNy, 1);
+
+    // implementation of term 1 (LHS of interior vorticity at t+dt)
+    for (int i=0; i<interiorNx; i++) {
+        for (int j=0; j<interiorNy; j++) {
+            if (j==0) {
+                term1[j+i*interiorNy] = (t1[j+i*interiorNy]*(omegaInterior[(j+1)+i*interiorNx]-omegaBottom[i])) - (t4[j+i*interiorNy]*(psiInterior[(j+1)+i*interiorNx]-psiBottom[i]));
+            } else if (j==interiorNy-1) {
+                term1[j+i*interiorNy] = (t1[j+i*interiorNy]*(omegaTop[i]-omegaInterior[(j-1)+i*interiorNx])) - (t4[j+i*interiorNy]*(psiTop[i]-psiInterior[(j-1)+i*interiorNx]));
+            } else {
+                term1[j+i*interiorNy] = (t1[j+i*interiorNy]*(omegaInterior[(j+1)+i*interiorNx]-omegaInterior[(j-1)+i*interiorNx])) - (t4[j+i*interiorNy]*(psiInterior[(j+1)+i*interiorNx]-psiInterior[(j-1)+i*interiorNx]));
+            }
+        }
+    }
+    
+    // Implementing RHS of interior vorticity at t+dt
     cblas_dsbmv(CblasColMajor, CblasLower, interiorNarr, interiorNy, 1.0, symmetricBandedLaplacianMatrix, interiorNy+1, omegaInterior, 1, 0.0, term3, 1);
     cblas_daxpy(interiorNy, -1/dx/dx, omegaLeft, 1, term3, 1); // Left
     cblas_daxpy(interiorNy, -1/dy/dy, omegaBottom, 1, term3, interiorNy); // Bottom
     cblas_daxpy(interiorNy, -1/dx/dx, omegaRight, 1, term3+((interiorNx-1)*interiorNy), 1); // Right
     cblas_daxpy(interiorNy, -1/dy/dy, omegaTop, 1, term3+(interiorNy-1), interiorNy); // Top
     
+    // Updating omega with new values
     cblas_daxpy(interiorNarr, -dt/Re, term3, 1, omegaInterior, 1);
-    PrintMatrix(omegaInterior,interiorNy,interiorNx,false);
+    cblas_daxpy(interiorNarr, dt/4/dx/dy, term1, 1, omegaInterior, 1);
+    
+    // Deallocating memory of temp variables
+    delete[] t1;
+    delete[] t4;
+    delete[] term1;
     delete[] term3;
 }
 
@@ -191,38 +225,6 @@ void LidDrivenCavity::Integrate()
     SetVorticityBoundaryConditions();
     SetInteriorVorticity();
     UpdateInteriorVorticity();
-    SolvePoissonProblem();
-}
-
-// REMOVE(?)
-void LidDrivenCavity::BruteForceSetInteriorVorticity()
-{
-//    for (unsigned int i=1; i<(Nx-1); i++) {
-//        for (unsigned int j=1; j<(Ny-1); j++) {
-//            omega[i*Nx+j] = -(psi[i*Nx+(j+1)]-2*psi[i*Nx+(j)]+psi[i*Nx+(j-1)]) /dx/dx - (psi[(i+1)*Nx+j]-2*psi[i*Nx+j]+psi[(i-1)*Nx+j]) /dy/dy;
-//        }
-//    }
-}
-
-void LidDrivenCavity::BruteForceUpdateInteriorVorticity()
-{
-//    for (unsigned int i=1; i<(Nx-1); i++) {
-//        for (unsigned int j=1; j<(Ny-1); j++) {
-//            double term1 = (psi[i*Nx+(j+1)]-psi[i*Nx+(j-1)])*(omega[(i+1)*Nx+j]-omega[(i-1)*Nx+j]);
-//            double term2 = (omega[i*Nx+(j+1)]-omega[i*Nx+(j-1)])*(psi[(i+1)*Nx+j]-psi[(i-1)*Nx+j]);
-//            double term3 = (omega[i*Nx+(j+1)]-2*omega[i*Nx+(j)]+omega[i*Nx+(j-1)]) /dx/dx;
-//            double term4 = (omega[(i+1)*Nx+j]-2*omega[i*Nx+j]+omega[(i-1)*Nx+j]) /dy/dy;
-//
-//            omega[i*Nx+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
-//        }
-//    }
-//    PrintOmegaMatrix();
-}
-
-void LidDrivenCavity::BruteForceIntegrate()
-{
-    BruteForceSetInteriorVorticity();
-    BruteForceUpdateInteriorVorticity();
     SolvePoissonProblem();
 }
 

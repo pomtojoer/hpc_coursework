@@ -73,9 +73,6 @@ private:
     void UpdateInteriorVorticity();
     void SolvePoissonProblem();
     
-    void BruteForceSetInteriorVorticity();
-    void BruteForceUpdateInteriorVorticity();
-    
     void SetSymmetricBandedLaplacianMatrix();
 };
 
