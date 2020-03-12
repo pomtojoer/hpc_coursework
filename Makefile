@@ -20,7 +20,10 @@ $(TARGET): $(OBJS)
 run: $(TARGET)
 	./$(TARGET)
 
-test: $(TARGET)
+test:$(TARGET)
+	./$(TARGET) --Nx=5 --Ny=5
+
+testAll: $(TARGET)
 	./$(TARGET)
 	./$(TARGET) --Lx=1.0 --Ly=1.0 --Nx=161 --Ny=161 --Px=0 --Py=0 --dt=0.0001 --T=1.0 --Re=100
 	./$(TARGET) --Lx=1.0 --Ly=1.0 --Nx=161 --Ny=161 --Px=0 --Py=0 --dt=0.0001 --T=1.0 --Re=400

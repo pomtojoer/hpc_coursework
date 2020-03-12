@@ -12,7 +12,7 @@ public:
     ~LidDrivenCavity();
 
     void SetDomainSize(double xlen, double ylen);
-    void SetGridSize(int nx, int ny);
+    void SetGridSize(unsigned int nx, unsigned int ny);
     void SetTimeStep(double deltat);
     void SetFinalTime(double finalt);
     void SetReynoldsNumber(double Re);
@@ -23,6 +23,9 @@ public:
     
     void PrintOmegaMatrix();
     // Add any other public functions
+    
+    // REMOVE THIS
+    void BruteForceIntegrate();
 
 private:
     double* v = nullptr;
@@ -45,17 +48,35 @@ private:
     double dy;
     
     // Discretised grids
-    double* omega = nullptr;
-    double* psi = nullptr;
+    double* omegaInterior = nullptr;
+    double* omegaRight = nullptr;
+    double* omegaLeft = nullptr;
+    double* omegaTop = nullptr;
+    double* omegaBottom = nullptr;
     
-    // Additional constants
+    double* psiInterior = nullptr;
+    double* psiRight = nullptr;
+    double* psiLeft = nullptr;
+    double* psiTop = nullptr;
+    double* psiBottom = nullptr;
+    
+    // Additional variables
     double udy;
-    int narr;
+    unsigned int narr;
+    unsigned int interiorNx;
+    unsigned int interiorNy;
+    unsigned int interiorNarr;
+    double* symmetricBandedLaplacianMatrix = nullptr;
     
     void SetVorticityBoundaryConditions();
     void SetInteriorVorticity();
     void UpdateInteriorVorticity();
     void SolvePoissonProblem();
+    
+    void BruteForceSetInteriorVorticity();
+    void BruteForceUpdateInteriorVorticity();
+    
+    void SetSymmetricBandedLaplacianMatrix();
 };
 
 #endif

@@ -3,6 +3,7 @@ namespace po = boost::program_options;
 
 #include <iostream>
 #include <iterator>
+//#include <mpi.h>
 using namespace std;
 
 #include "LidDrivenCavity.h"
@@ -15,10 +16,10 @@ int main(int argc, char **argv)
 	    ("help", "Prints help messege.")
 		("Lx", po::value<double>()->default_value(1.0), "Set length of the domain in the x-direction. Default = 1.0")
         ("Ly", po::value<double>()->default_value(1.0), "Set length of the domain in the y-direction. Default = 1.0")
-        ("Nx", po::value<int>()->default_value(161), "Set number of grid points in the x-direction. Default = 161")
-        ("Ny", po::value<int>()->default_value(161), "Set number of grid points in the y-direction. Default = 161")
-        ("Px", po::value<int>()->default_value(0), "Set number of partitions in the x-direction. Default = 0")
-        ("Py", po::value<int>()->default_value(0), "Set number of partitions in the y-direction. Default = 0")
+        ("Nx", po::value<unsigned int>()->default_value(161), "Set number of grid points in the x-direction. Default = 161")
+        ("Ny", po::value<unsigned int>()->default_value(161), "Set number of grid points in the y-direction. Default = 161")
+        ("Px", po::value<unsigned int>()->default_value(0), "Set number of partitions in the x-direction. Default = 0")
+        ("Py", po::value<unsigned int>()->default_value(0), "Set number of partitions in the y-direction. Default = 0")
         ("dt", po::value<double>()->default_value(0.0001), "Set timestep. Default = 1.0")
         ("T", po::value<double>()->default_value(1), "Set final time. Default = 1E-5")
         ("Re", po::value<double>()->default_value(100), "Set Reynolds number. Default = 100");
@@ -39,10 +40,10 @@ int main(int argc, char **argv)
     // Extracting the options and saving it into variables
     const double Lx = vm["Lx"].as<double>();
     const double Ly = vm["Ly"].as<double>();
-    const double Nx = vm["Nx"].as<int>();
-    const double Ny = vm["Ny"].as<int>();
-    const double Px = vm["Px"].as<int>();
-    const double Py = vm["Py"].as<int>();
+    const double Nx = vm["Nx"].as<unsigned int>();
+    const double Ny = vm["Ny"].as<unsigned int>();
+    const double Px = vm["Px"].as<unsigned int>();
+    const double Py = vm["Py"].as<unsigned int>();
     const double dt = vm["dt"].as<double>();
     const double T = vm["T"].as<double>();
     const double Re = vm["Re"].as<double>();
@@ -72,15 +73,39 @@ int main(int argc, char **argv)
     if (dt >= (Re*dx*dy/4)) {
         cout << "Re*dx*dy/4 = " << Re*dx*dy/4;
         cout << "The time step chosen is too large. Please choose a time step such that dt < Re*dt*dx/4." << endl;
-        return 1;
+        return -1;
     }
     
+//    // Checking partitions match MPI
+//    int n    = 0;
+//    int rank = 0;
+//    int size = 0;
+//
+//    // Initialise MPI.
+//    int err = MPI_Init(&argc, &argv);
+//    if (err != MPI_SUCCESS) {
+//        cout << "Failed to initialise MPI" << endl;
+//        return -1;
+//    }
+//
+//    // Get the rank and comm size on each process.
+//    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+//    MPI_Comm_size(MPI_COMM_WORLD, &size);
+//
+//    // Check number of processes is suitable
+//    if ((Nx*Np) % size) {
+//        if (rank == 0) {
+//            cout << "Error: Number of processes must be Nx * Ny" << endl;
+//        }
+//        MPI_Finalize();
+//        return 0;
+//    }
     
-    // Checking partitions match MPI......
+    
     
     // Create a new instance of the LidDrivenCavity class
     LidDrivenCavity* solver = new LidDrivenCavity();
-
+    
     // Configuring Solver
     solver->SetDomainSize(Lx,Ly);
     solver->SetGridSize(Nx,Ny);
@@ -90,9 +115,7 @@ int main(int argc, char **argv)
     solver->SetGridSpacing(dx,dy);
     
     solver->Initialise();
-    solver->PrintOmegaMatrix();
-    // Run the solver
-    // solver->Integrate();
+    solver->Integrate();
     //
     return 0;
 }
