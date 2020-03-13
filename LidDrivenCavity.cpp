@@ -1,4 +1,5 @@
 #include "LidDrivenCavity.h"
+#include "Poisson2DSolver.h"
 #include "cblas.h"
 #include <iostream>
 #include <iomanip>
@@ -82,6 +83,10 @@ void LidDrivenCavity::SetGridSpacing(double deltax, double deltay)
 {
     dx = deltax;
     dy = deltay;
+    
+    alpha = 1 / dx / dx;
+    beta = 1 / dy / dy;
+    gamma = 2*(alpha+beta);
 }
 
 void LidDrivenCavity::Initialise()
@@ -112,12 +117,16 @@ void LidDrivenCavity::SetSymmetricBandedLaplacianMatrix()
     // Initialising zeros matrix
     symmetricBandedLaplacianMatrix = new double[interiorNarr*(interiorNy+1)]();
     
-    double alpha = 1 / dx / dx;
-    double beta = 1 / dy / dy;
-    double gamma = 2*(alpha+beta);
-    
     for (unsigned int i=0; i<interiorNarr; i++) {
-        // Column-major storage of laplacian banded matrix
+        /* Column-major storage of laplacian banded symmetric matrix for interiorNx=3, interiorNy=3
+         
+         | g  g  g  g  g  g  g  g  g |
+         |-b -b  * -b -b  * -b -b  * |
+         | *  *  *  *  *  *  *  *  * |
+         |-a -a -a -a -a -a  *  *  * |
+         
+         Where the repeating cell is of size interiorNy*(interiorNy+1) and is repeated interiorNx times
+         */
         symmetricBandedLaplacianMatrix[i*(interiorNy+1) + 0] = gamma;
         if ((i+1)%interiorNy!=0) {
             symmetricBandedLaplacianMatrix[i*(interiorNy+1) + 1] = -1*beta;
@@ -150,13 +159,10 @@ void LidDrivenCavity::SetVorticityBoundaryConditions()
 
 void LidDrivenCavity::SetInteriorVorticity()
 {
-    PrintMatrix(psiInterior,interiorNy,interiorNx,false);
-    PrintMatrix(psiRight,interiorNy,1,false);
-    PrintMatrix(psiLeft,interiorNy,1,false);
-    PrintMatrix(psiTop,1,interiorNx,false);
-    PrintMatrix(psiBottom,1,interiorNx,false);
-
+    // Setting Interior vorticity via matrix operation using the generated laplacian matrix
     cblas_dsbmv(CblasColMajor, CblasLower, interiorNarr, interiorNy, 1.0, symmetricBandedLaplacianMatrix, interiorNy+1, psiInterior, 1, 0.0, omegaInterior, 1);
+    
+    // Applying the boundaries conditions contributions to the calculated interior vorticity
     cblas_daxpy(interiorNy, -1/dx/dx, psiLeft, 1, omegaInterior, 1); // Left
     cblas_daxpy(interiorNy, -1/dy/dy, psiBottom, 1, omegaInterior, interiorNy); // Bottom
     cblas_daxpy(interiorNy, -1/dx/dx, psiRight, 1, omegaInterior+((interiorNx-1)*interiorNy), 1); // Right
@@ -165,6 +171,9 @@ void LidDrivenCavity::SetInteriorVorticity()
 
 void LidDrivenCavity::UpdateInteriorVorticity()
 {
+    // Function to update the interior vorticity at time t
+    
+    // Declaration of variables
     double* t1 = new double[interiorNarr]{};
     double* t4 = new double[interiorNarr]{};
     double* term1 = new double[interiorNarr]{};
@@ -185,8 +194,8 @@ void LidDrivenCavity::UpdateInteriorVorticity()
     cblas_daxpy(interiorNy, 1.0, omegaRight, 1, t4+(interiorNx-1)*interiorNy, 1);
 
     // implementation of term 1 (LHS of interior vorticity at t+dt)
-    for (int i=0; i<interiorNx; i++) {
-        for (int j=0; j<interiorNy; j++) {
+    for (unsigned int i=0; i<interiorNx; i++) {
+        for (unsigned int j=0; j<interiorNy; j++) {
             if (j==0) {
                 term1[j+i*interiorNy] = (t1[j+i*interiorNy]*(omegaInterior[(j+1)+i*interiorNx]-omegaBottom[i])) - (t4[j+i*interiorNy]*(psiInterior[(j+1)+i*interiorNx]-psiBottom[i]));
             } else if (j==interiorNy-1) {
@@ -215,27 +224,27 @@ void LidDrivenCavity::UpdateInteriorVorticity()
     delete[] term3;
 }
 
-void LidDrivenCavity::SolvePoissonProblem()
-{
-    
-}
-
 void LidDrivenCavity::Integrate()
 {
+    Poisson2DSolver* poissonSolver = new Poisson2DSolver();
+    poissonSolver->SetBoundaryConditions(omegaTop, omegaBottom, interiorNx, omegaLeft, omegaRight, interiorNy);
+    poissonSolver->GenerateScalapackMatrixAHat(alpha,beta,gamma);
+    
     SetVorticityBoundaryConditions();
     SetInteriorVorticity();
     UpdateInteriorVorticity();
-    SolvePoissonProblem();
-}
-
-
-
-// Remove these
-void LidDrivenCavity::PrintOmegaMatrix() {
-//    for (int x=0; x<Nx; x++) {
-//        for (int y=0; y<Ny; y++) {
-//            cout << setprecision(3) <<setw(7) << left << omega[x*Nx+y];
-//        }
-//        cout << endl;
-//    }
+    poissonSolver->ApplyBoundaryConditions();
+    
+    cout << "Testing started here" << endl;
+    printVector(psiTop,interiorNx);
+    printVector(psiBottom,interiorNx);
+    printVector(psiLeft,interiorNy);
+    printVector(psiRight,interiorNy);
+    PrintMatrix(psiInterior,interiorNy,interiorNx,false);
+    cout << endl;
+    printVector(omegaTop,interiorNx);
+    printVector(omegaBottom,interiorNx);
+    printVector(omegaLeft,interiorNy);
+    printVector(omegaRight,interiorNy);
+    PrintMatrix(omegaInterior,interiorNy,interiorNx,false);
 }

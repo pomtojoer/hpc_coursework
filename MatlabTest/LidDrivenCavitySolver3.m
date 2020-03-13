@@ -48,10 +48,13 @@ end
 
 % Iterative method
 
-% while T > 0
-%     
-%     
-% end
+while T > 0
+    disp T;
+    
+    
+    
+    T = T - dt;
+end
 
 
 % Applying BC

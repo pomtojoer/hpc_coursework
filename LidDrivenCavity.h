@@ -20,17 +20,9 @@ public:
 
     void Initialise();
     void Integrate();
+    void GeneratePlots();
     
-    void PrintOmegaMatrix();
-    // Add any other public functions
-    
-    // REMOVE THIS
-    void BruteForceIntegrate();
-
 private:
-    double* v = nullptr;
-    double* s = nullptr;
-    
     // Given constants
     const double U = 1.0;
 
@@ -47,13 +39,14 @@ private:
     double dx;
     double dy;
     
-    // Discretised grids
+    // Discretised grids for omega
     double* omegaInterior = nullptr;
     double* omegaRight = nullptr;
     double* omegaLeft = nullptr;
     double* omegaTop = nullptr;
     double* omegaBottom = nullptr;
     
+    // Discretised grids for psi
     double* psiInterior = nullptr;
     double* psiRight = nullptr;
     double* psiLeft = nullptr;
@@ -62,16 +55,19 @@ private:
     
     // Additional variables
     double udy;
+    double alpha;
+    double beta;
+    double gamma;
     unsigned int narr;
     unsigned int interiorNx;
     unsigned int interiorNy;
     unsigned int interiorNarr;
     double* symmetricBandedLaplacianMatrix = nullptr;
     
+    // Private functions for solving vorticity and streamfunction
     void SetVorticityBoundaryConditions();
     void SetInteriorVorticity();
     void UpdateInteriorVorticity();
-    void SolvePoissonProblem();
     
     void SetSymmetricBandedLaplacianMatrix();
 };

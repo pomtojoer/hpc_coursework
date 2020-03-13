@@ -119,8 +119,10 @@ int main(int argc, char **argv)
     solver->SetReynoldsNumber(Re);
     solver->SetGridSpacing(dx,dy);
     
+    // Running Solver
     solver->Initialise();
     solver->Integrate();
-    //
+    
+    
     return 0;
 }

@@ -1,9 +1,9 @@
 CC = g++
 CXXFLAGS = -std=c++11 -Wall -O2 -pedantic
 LDLIBS = -lboost_program_options -llapack -lblas
-HDRS = LidDrivenCavity.h
+HDRS = LidDrivenCavity.h Poisson2DSolver.h
 TARGET = Solve
-OBJS = LidDrivenCavitySolver.o LidDrivenCavity.o
+OBJS = LidDrivenCavitySolver.o LidDrivenCavity.o Poisson2DSolver.o
 
 default: $(TARGET)
 all: $(TARGET)
