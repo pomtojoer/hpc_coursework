@@ -65,6 +65,7 @@ void LidDrivenCavity::SetMPIConfig()
             
             if (MPIRank == source) {
                 // Generating i-j inner coordinate pairs
+                
                 int* iCoord = new int[interiorNarr];
                 int* jCoord = new int[interiorNarr];
                 for (unsigned int i=0; i<interiorNx; i++) {
@@ -88,37 +89,41 @@ void LidDrivenCavity::SetMPIConfig()
                     endingPositions[i] = currentLocation-1;
                 }
                 
-            
                 for (int dest=0; dest<MPISize; dest++) {
                     int startPos = startingPositions[dest];
                     int endPos = endingPositions[dest];
                     int lenArr = endPos-startPos+1;
-                    int* tempiCoords = new int[lenArr];
-                    int* tempjCoords = new int[lenArr];
-                    std::copy(iCoord+startPos, iCoord+endPos+1, tempiCoords);
-                    std::copy(jCoord+startPos, jCoord+endPos+1, tempjCoords);
-                    MPI_Send(&lenArr, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
-                    MPI_Send(tempiCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
-                    MPI_Send(tempjCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
-                    delete[] tempiCoords;
-                    delete[] tempjCoords;
+                    if (dest==0) {
+                        coordArrLen = lenArr;
+                        iInnerCoords = new int[coordArrLen];
+                        jInnerCoords = new int[coordArrLen];
+                        std::copy(iCoord+startPos, iCoord+endPos+1, iInnerCoords);
+                        std::copy(jCoord+startPos, jCoord+endPos+1, jInnerCoords);
+                    } else {
+                        int* tempiCoords = new int[lenArr];
+                        int* tempjCoords = new int[lenArr];
+                        std::copy(iCoord+startPos, iCoord+endPos+1, tempiCoords);
+                        std::copy(jCoord+startPos, jCoord+endPos+1, tempjCoords);
+                        MPI_Send(&lenArr, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
+                        MPI_Send(tempiCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
+                        MPI_Send(tempjCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
+                        delete[] tempiCoords;
+                        delete[] tempjCoords;
+                    }
                 }
-                
                 delete[] startingPositions;
                 delete[] endingPositions;
                 
                 delete[] iCoord;
                 delete[] jCoord;
             }
-            else if (MPIRank > source) {
-               
+            else {
+               MPI_Recv(&coordArrLen, 1, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+               iInnerCoords = new int[coordArrLen];
+               jInnerCoords = new int[coordArrLen];
+               MPI_Recv(iInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+               MPI_Recv(jInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
-            
-            MPI_Recv(&coordArrLen, 1, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            iInnerCoords = new int[coordArrLen];
-            jInnerCoords = new int[coordArrLen];
-            MPI_Recv(iInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(jInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
 }
@@ -209,13 +214,15 @@ void LidDrivenCavity::SetInteriorVorticity()
         }
         
         if (MPIRank>0) {
-//            MPI_Send(tempjCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
+            MPI_Send(w, narr, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         } else {
-//            for (i=1; i<MPISize; i++) {
-//                <#statements#>
-//            }
+            for (int src=1; src<MPISize; src++) {
+                double* tempW = new double[narr];
+                MPI_Recv(tempW, narr, MPI_DOUBLE, src, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                cblas_daxpy(narr, 1.0, tempW, 1, w, 1);
+                delete[] tempW;
+            }
         }
-        PrintMatrix(w,Ny,Nx,false);
     } else {
         for (unsigned int i=1; i<(Nx-1); i++) {
             for (unsigned int j=1; j<(Ny-1); j++) {
