@@ -17,7 +17,6 @@ public:
     void SetFinalTime(double finalt);
     void SetReynoldsNumber(double Re);
     void SetGridSpacing(double deltax, double deltay);
-    void SetMPIConfig();
 
     void Initialise();
     void Integrate();
@@ -41,33 +40,36 @@ private:
     double dy;
     
     // Discretised grids for omega
-    double* w;
-    double* s;
+    double* omegaInterior = nullptr;
+    double* omegaRight = nullptr;
+    double* omegaLeft = nullptr;
+    double* omegaTop = nullptr;
+    double* omegaBottom = nullptr;
+    
+    // Discretised grids for psi
+    double* psiInterior = nullptr;
+    double* psiRight = nullptr;
+    double* psiLeft = nullptr;
+    double* psiTop = nullptr;
+    double* psiBottom = nullptr;
     
     // Additional variables
+    double udy;
     double alpha;
     double beta;
     double gamma;
-    
     unsigned int narr;
     unsigned int interiorNx;
     unsigned int interiorNy;
     unsigned int interiorNarr;
+    double* symmetricBandedLaplacianMatrix = nullptr;
     
-    // Variables for MPI
-    int MPIInitialised;
-    int MPIRank;
-    int MPISize;
-    
-    int coordArrLen;
-    int* iInnerCoords;
-    int* jInnerCoords;
-        
     // Private functions for solving vorticity and streamfunction
     void SetVorticityBoundaryConditions();
     void SetInteriorVorticity();
     void UpdateInteriorVorticity();
     
+    void SetSymmetricBandedLaplacianMatrix();
 };
 
 #endif

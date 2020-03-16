@@ -1,9 +1,10 @@
 #include "LidDrivenCavity.h"
 #include "Poisson2DSolver.h"
 #include "cblas.h"
+#include "mpi.h"
 #include <iostream>
 #include <iomanip>
-
+#include <cmath>
 
 void PrintMatrix(double* mat, int rows, int cols, bool isRowMajor) {
     for (int i=0; i<rows; i++) {
@@ -26,23 +27,100 @@ void printVector(double* vec, int n) {
     }
 }
 
+void printVector(int* vec, int n) {
+    cout << "The vector looks like: " << endl;
+    for (int i=0; i<n; i++) {
+        cout << vec[i] << endl;
+    }
+    cout << endl;
+}
+
 LidDrivenCavity::LidDrivenCavity()
 {
 }
 
 LidDrivenCavity::~LidDrivenCavity()
 {
-    delete[] omegaInterior;
-    delete[] omegaRight;
-    delete[] omegaLeft;
-    delete[] omegaTop;
-    delete[] omegaBottom;
-    
-    delete[] psiInterior;
-    delete[] psiRight;
-    delete[] psiLeft;
-    delete[] psiTop;
-    delete[] psiBottom;
+    delete[] w;
+    delete[] s;
+}
+
+void LidDrivenCavity::SetMPIConfig()
+{
+    MPI_Initialized(&MPIInitialised);
+    if (!MPIInitialised){
+        cout << "Error: MPI was not initialisde." << endl;
+        throw std::exception();
+    } else {
+        // Get the rank and comm size on each process.
+        MPI_Comm_rank(MPI_COMM_WORLD, &MPIRank);
+        MPI_Comm_size(MPI_COMM_WORLD, &MPISize);
+        
+        if (MPISize > 1) {
+            int spacing = (int) floor((double) interiorNarr / (double)MPISize);
+            int remainder = (int)interiorNarr%MPISize;
+            
+            int tag = 0;
+            int source = 0;
+            
+            if (MPIRank == source) {
+                // Generating i-j inner coordinate pairs
+                int* iCoord = new int[interiorNarr];
+                int* jCoord = new int[interiorNarr];
+                for (unsigned int i=0; i<interiorNx; i++) {
+                    for (unsigned int j=0; j<interiorNx; j++) {
+                        iCoord[i*interiorNy+j] = i+1;
+                        jCoord[i*interiorNy+j] = j+1;
+                    }
+                }
+                
+                int* startingPositions = new int [MPISize];
+                int* endingPositions = new int [MPISize];
+                
+                int currentLocation = 0;
+                for (int i=0; i<MPISize; i++) {
+                    startingPositions[i] = currentLocation;
+                    currentLocation += spacing;
+                    if (remainder>0) {
+                        currentLocation++;
+                        remainder--;
+                    }
+                    endingPositions[i] = currentLocation-1;
+                }
+                
+            
+                for (int dest=0; dest<MPISize; dest++) {
+                    int startPos = startingPositions[dest];
+                    int endPos = endingPositions[dest];
+                    int lenArr = endPos-startPos+1;
+                    int* tempiCoords = new int[lenArr];
+                    int* tempjCoords = new int[lenArr];
+                    std::copy(iCoord+startPos, iCoord+endPos+1, tempiCoords);
+                    std::copy(jCoord+startPos, jCoord+endPos+1, tempjCoords);
+                    MPI_Send(&lenArr, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
+                    MPI_Send(tempiCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
+                    MPI_Send(tempjCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
+                    delete[] tempiCoords;
+                    delete[] tempjCoords;
+                }
+                
+                delete[] startingPositions;
+                delete[] endingPositions;
+                
+                delete[] iCoord;
+                delete[] jCoord;
+            }
+            else if (MPIRank > source) {
+               
+            }
+            
+            MPI_Recv(&coordArrLen, 1, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            iInnerCoords = new int[coordArrLen];
+            jInnerCoords = new int[coordArrLen];
+            MPI_Recv(iInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(jInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }
+    }
 }
 
 void LidDrivenCavity::SetDomainSize(double xlen, double ylen)
@@ -91,160 +169,159 @@ void LidDrivenCavity::SetGridSpacing(double deltax, double deltay)
 
 void LidDrivenCavity::Initialise()
 {
-    // Calculating resuable constant and setting it
-    udy = 2*U/dy;
-    
     // Initialise as zeros array for initial conditions
     // t = 0, omega(x,y) = 0, psi(x,y) = 0
-    omegaInterior = new double[interiorNarr]{};
-    omegaRight = new double[interiorNy]{};
-    omegaLeft = new double[interiorNy]{};
-    omegaTop = new double[interiorNx]{};
-    omegaBottom = new double[interiorNx]{};
-    
-    psiInterior = new double[interiorNarr]{7,49,73,78,23,9,87,3,27};
-    psiRight = new double[interiorNy]{58,40,29};
-    psiLeft = new double[interiorNy]{30,65,40};
-    psiTop = new double[interiorNx]{72,92,12};
-    psiBottom = new double[interiorNx]{44,42,3};
-    
-    // Generating laplacian matrix
-    SetSymmetricBandedLaplacianMatrix();
-}
-
-void LidDrivenCavity::SetSymmetricBandedLaplacianMatrix()
-{
-    // Initialising zeros matrix
-    symmetricBandedLaplacianMatrix = new double[interiorNarr*(interiorNy+1)]();
-    
-    for (unsigned int i=0; i<interiorNarr; i++) {
-        /* Column-major storage of laplacian banded symmetric matrix for interiorNx=3, interiorNy=3
-         
-         | g  g  g  g  g  g  g  g  g |
-         |-b -b  * -b -b  * -b -b  * |
-         | *  *  *  *  *  *  *  *  * |
-         |-a -a -a -a -a -a  *  *  * |
-         
-         Where the repeating cell is of size interiorNy*(interiorNy+1) and is repeated interiorNx times
-         */
-        symmetricBandedLaplacianMatrix[i*(interiorNy+1) + 0] = gamma;
-        if ((i+1)%interiorNy!=0) {
-            symmetricBandedLaplacianMatrix[i*(interiorNy+1) + 1] = -1*beta;
-        }
-        if (i<interiorNy*(interiorNx-1)) {
-            symmetricBandedLaplacianMatrix[i*(interiorNy+1) + interiorNy] = -1*alpha;
-        }
-    }
+    w = new double[narr]{};
+    s = new double[narr]{7,49,73,58,30,72,44,78,23,9,40,65,92,42,87,3,27,29,40,12,3,69,9,57,60};
 }
 
 
 void LidDrivenCavity::SetVorticityBoundaryConditions()
 {
-    // Setting top bottom boundary conditions
-    for (unsigned int i=0; i<interiorNx; i++) {
-        // Setting the top BC
-        omegaTop[i] = (psiTop[i]-psiInterior[(interiorNy-1)+i*interiorNy])*2/dy/dy-udy;
-        // Setting the bottom BC
-        omegaBottom[i] = (psiBottom[i]-psiInterior[(0)+i*interiorNy])*2/dy/dy;
-    }
-    
-    // Setting left right boundary conditions
-    for (unsigned int i=0; i<interiorNy; i++) {
-        // Setting the left BC
-        omegaLeft[i] = (psiLeft[i]-psiInterior[i])*2/dx/dx;
-        // Setting the right BC
-        omegaRight[i] = (psiRight[i]-psiInterior[i+(interiorNx-1)*interiorNy])*2/dx/dx;
+    if(MPIRank==0) {
+        // Setting top bottom boundary conditions
+        for (unsigned int i=0; i<Nx; i++) {
+            // Setting the top BC
+            w[i*Ny+(Ny-1)] = (s[i*Ny+(Ny-1)]-s[i*Ny+(Ny-2)]) * 2/dy/dy - 2*U/dy;
+            // Setting the bottom BC
+            w[i*Ny] = (s[i*Ny]-s[i*Ny+1]) * 2/dy/dy;
+        }
+
+        // Setting left right boundary conditions
+        for (unsigned int i=0; i<Ny; i++) {
+            // Setting the left BC
+            w[i] = (s[i]-s[i+Ny]) * 2/dx/dx;
+            // Setting the right BC
+            w[i+Ny*(Nx-1)] = (s[i+Ny*(Nx-1)]-s[i+Ny*(Nx-2)]) * 2/dx/dx;
+        }
     }
 }
 
 void LidDrivenCavity::SetInteriorVorticity()
 {
-    // Setting Interior vorticity via matrix operation using the generated laplacian matrix
-    cblas_dsbmv(CblasColMajor, CblasLower, interiorNarr, interiorNy, 1.0, symmetricBandedLaplacianMatrix, interiorNy+1, psiInterior, 1, 0.0, omegaInterior, 1);
-    
-    // Applying the boundaries conditions contributions to the calculated interior vorticity
-    cblas_daxpy(interiorNy, -1/dx/dx, psiLeft, 1, omegaInterior, 1); // Left
-    cblas_daxpy(interiorNy, -1/dy/dy, psiBottom, 1, omegaInterior, interiorNy); // Bottom
-    cblas_daxpy(interiorNy, -1/dx/dx, psiRight, 1, omegaInterior+((interiorNx-1)*interiorNy), 1); // Right
-    cblas_daxpy(interiorNy, -1/dy/dy, psiTop, 1, omegaInterior+(interiorNy-1), interiorNy); // Top
-}
-
-void LidDrivenCavity::UpdateInteriorVorticity()
-{
-    // Function to update the interior vorticity at time t
-    
-    // Declaration of variables
-    double* t1 = new double[interiorNarr]{};
-    double* t4 = new double[interiorNarr]{};
-    double* term1 = new double[interiorNarr]{};
-    double* term3 = new double[interiorNarr]{};
-    
-    // implementation of t1
-    // (psi(i+1,j) - psi(i-1,j))
-    cblas_dcopy(interiorNarr-interiorNy, psiInterior+interiorNy, 1, t1, 1);
-    cblas_daxpy(interiorNarr-interiorNy, -1.0, psiInterior, 1, t1+interiorNy, 1);
-    cblas_daxpy(interiorNy, -1.0, psiLeft, 1, t1, 1);
-    cblas_daxpy(interiorNy, 1.0, psiRight, 1, t1+(interiorNx-1)*interiorNy, 1);
-    
-    // implementation of t4
-    // (omega(i+1,j) - omega(i-1,j))
-    cblas_dcopy(interiorNarr-interiorNy, omegaInterior+interiorNy, 1, t4, 1);
-    cblas_daxpy(interiorNarr-interiorNy, -1.0, omegaInterior, 1, t4+interiorNy, 1);
-    cblas_daxpy(interiorNy, -1.0, omegaLeft, 1, t4, 1);
-    cblas_daxpy(interiorNy, 1.0, omegaRight, 1, t4+(interiorNx-1)*interiorNy, 1);
-
-    // implementation of term 1 (LHS of interior vorticity at t+dt)
-    for (unsigned int i=0; i<interiorNx; i++) {
-        for (unsigned int j=0; j<interiorNy; j++) {
-            if (j==0) {
-                term1[j+i*interiorNy] = (t1[j+i*interiorNy]*(omegaInterior[(j+1)+i*interiorNx]-omegaBottom[i])) - (t4[j+i*interiorNy]*(psiInterior[(j+1)+i*interiorNx]-psiBottom[i]));
-            } else if (j==interiorNy-1) {
-                term1[j+i*interiorNy] = (t1[j+i*interiorNy]*(omegaTop[i]-omegaInterior[(j-1)+i*interiorNx])) - (t4[j+i*interiorNy]*(psiTop[i]-psiInterior[(j-1)+i*interiorNx]));
-            } else {
-                term1[j+i*interiorNy] = (t1[j+i*interiorNy]*(omegaInterior[(j+1)+i*interiorNx]-omegaInterior[(j-1)+i*interiorNx])) - (t4[j+i*interiorNy]*(psiInterior[(j+1)+i*interiorNx]-psiInterior[(j-1)+i*interiorNx]));
+    if (MPISize > 1) {
+//        cout << "Rank " << MPIRank << " Start: " << startingPosition << " End: " << endingPosition << endl;
+        for (int k=0; k<coordArrLen; k++) {
+            int i = iInnerCoords[k];
+            int j = jInnerCoords[k];
+            
+            w[i*Nx+j] = -(s[i*Nx+(j+1)]-2*s[i*Nx+(j)]+s[i*Nx+(j-1)]) /dx/dx - (s[(i+1)*Nx+j]-2*s[i*Nx+j]+s[(i-1)*Nx+j]) /dy/dy;
+        }
+        
+        if (MPIRank>0) {
+//            MPI_Send(tempjCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
+        } else {
+//            for (i=1; i<MPISize; i++) {
+//                <#statements#>
+//            }
+        }
+        PrintMatrix(w,Ny,Nx,false);
+    } else {
+        for (unsigned int i=1; i<(Nx-1); i++) {
+            for (unsigned int j=1; j<(Ny-1); j++) {
+                w[i*Ny+j] = -(s[i*Ny+(j+1)]-2*s[i*Ny+(j)]+s[i*Ny+(j-1)]) /dx/dx - (s[(i+1)*Ny+j]-2*s[i*Ny+j]+s[(i-1)*Ny+j]) /dy/dy;
             }
         }
     }
     
-    // Implementing RHS of interior vorticity at t+dt
-    cblas_dsbmv(CblasColMajor, CblasLower, interiorNarr, interiorNy, 1.0, symmetricBandedLaplacianMatrix, interiorNy+1, omegaInterior, 1, 0.0, term3, 1);
-    cblas_daxpy(interiorNy, -1/dx/dx, omegaLeft, 1, term3, 1); // Left
-    cblas_daxpy(interiorNy, -1/dy/dy, omegaBottom, 1, term3, interiorNy); // Bottom
-    cblas_daxpy(interiorNy, -1/dx/dx, omegaRight, 1, term3+((interiorNx-1)*interiorNy), 1); // Right
-    cblas_daxpy(interiorNy, -1/dy/dy, omegaTop, 1, term3+(interiorNy-1), interiorNy); // Top
     
-    // Updating omega with new values
-    cblas_daxpy(interiorNarr, -dt/Re, term3, 1, omegaInterior, 1);
-    cblas_daxpy(interiorNarr, dt/4/dx/dy, term1, 1, omegaInterior, 1);
+}
+
+void LidDrivenCavity::UpdateInteriorVorticity()
+{
+    double* temp = new double[narr]{};
     
-    // Deallocating memory of temp variables
-    delete[] t1;
-    delete[] t4;
-    delete[] term1;
-    delete[] term3;
+    for (unsigned int i=1; i<(Nx-1); i++) {
+        for (unsigned int j=1; j<(Ny-1); j++) {
+            double term1 = (s[(i+1)*Ny+j]-s[(i-1)*Ny+j])*(w[i*Ny+(j+1)]-w[i*Ny+(j-1)]);
+            double term2 = (s[i*Ny+(j+1)]-s[i*Ny+(j-1)])*(w[(i+1)*Ny+j]-w[(i-1)*Ny+j]);
+            double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dx/dx;
+            double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dy/dy;
+            
+            temp[i*Nx+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
+        }
+    }
+    
+    cblas_daxpy(narr,1,temp,1,w,1);
+    delete[] temp;
 }
 
 void LidDrivenCavity::Integrate()
 {
-    Poisson2DSolver* poissonSolver = new Poisson2DSolver();
-    poissonSolver->SetBoundaryConditions(omegaTop, omegaBottom, interiorNx, omegaLeft, omegaRight, interiorNy);
-    poissonSolver->GenerateScalapackMatrixAHat(alpha,beta,gamma);
+    double* news = new double[narr];
     
+    // Note that in our case we do not need to impose the boundary conditions on the w matrix
+    // due to the fact that the edges of the s matrix are always zeros (stream function zero)
+//    Poisson2DSolver* poissonSolver = new Poisson2DSolver();
+//    poissonSolver->Initialise(news, w, Nx, Ny);
+//    poissonSolver->InitialiseMPI();
+//    poissonSolver->GenerateScalapackMatrixAHat(alpha,beta,gamma);
+    
+    if (MPIRank==0) {
+        cout << "At initial" << endl;
+        cout << "omega" << endl;
+        PrintMatrix(w,Ny,Nx,false);
+        cout << "psi" << endl;
+        PrintMatrix(s,Ny,Nx,false);
+    }
+
     SetVorticityBoundaryConditions();
+    if (MPIRank==0) {
+        cout << "After setting BC" << endl;
+        cout << "omega" << endl;
+        PrintMatrix(w,Ny,Nx,false);
+        cout << "psi" << endl;
+        PrintMatrix(s,Ny,Nx,false);
+    }
+
     SetInteriorVorticity();
-    UpdateInteriorVorticity();
-    poissonSolver->ApplyBoundaryConditions();
+    if (MPIRank==0) {
+        cout << "After setting vorticity at t" << endl;
+        cout << "omega" << endl;
+        PrintMatrix(w,Ny,Nx,false);
+        cout << "psi" << endl;
+        PrintMatrix(s,Ny,Nx,false);
+    }
+//    cout << "omega" << endl;
+//    PrintMatrix(w,Ny,Nx,false);
+//    cout << "psi" << endl;
+//    PrintMatrix(s,Ny,Nx,false);
+//
+//    UpdateInteriorVorticity();
+//    cout << "After setting vorticity at t+dt" << endl;
+//    cout << "omega" << endl;
+//    PrintMatrix(w,Ny,Nx,false);
+//    cout << "psi" << endl;
+//    PrintMatrix(s,Ny,Nx,false);
     
-    cout << "Testing started here" << endl;
-    printVector(psiTop,interiorNx);
-    printVector(psiBottom,interiorNx);
-    printVector(psiLeft,interiorNy);
-    printVector(psiRight,interiorNy);
-    PrintMatrix(psiInterior,interiorNy,interiorNx,false);
-    cout << endl;
-    printVector(omegaTop,interiorNx);
-    printVector(omegaBottom,interiorNx);
-    printVector(omegaLeft,interiorNy);
-    printVector(omegaRight,interiorNy);
-    PrintMatrix(omegaInterior,interiorNy,interiorNx,false);
+//    poissonSolver->ApplyBoundaryConditions();
+//
+//    cout << "Testing started here" << endl;
+//    printVector(psiTop,interiorNx);
+//    printVector(psiBottom,interiorNx);
+//    printVector(psiLeft,interiorNy);
+//    printVector(psiRight,interiorNy);
+//    PrintMatrix(psiInterior,interiorNy,interiorNx,false);
+//    cout << endl;
+//    printVector(omegaTop,interiorNx);
+//    printVector(omegaBottom,interiorNx);
+//    printVector(omegaLeft,interiorNy);
+//    printVector(omegaRight,interiorNy);
+//    PrintMatrix(omegaInterior,interiorNy,interiorNx,false);
+    
+    if (MPISize>1) {
+        if (MPIRank>0) {
+            int source = 0;
+            MPI_Recv(s, narr, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        } else {
+            for (int dest=1; dest<MPISize; dest++) {
+                MPI_Send(s, narr, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
+            }
+        }
+    }
+}
+
+void LidDrivenCavity::GeneratePlots()
+{
+    
 }

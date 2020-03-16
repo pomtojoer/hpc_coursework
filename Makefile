@@ -1,4 +1,4 @@
-CC = g++
+CC = mpicxx
 CXXFLAGS = -std=c++11 -Wall -O2 -pedantic
 LDLIBS = -lboost_program_options -llapack -lblas
 HDRS = LidDrivenCavity.h Poisson2DSolver.h
@@ -21,7 +21,10 @@ run: $(TARGET)
 	./$(TARGET)
 
 test:$(TARGET)
-	./$(TARGET) --Nx=5 --Ny=5
+	mpiexec -np 4 ./$(TARGET) --Nx=5 --Ny=5 --Px=2 --Py=2
+
+test1:$(TARGET)
+	mpiexec -np 1 ./$(TARGET) --Nx=5 --Ny=5
 
 testAll: $(TARGET)
 	./$(TARGET)

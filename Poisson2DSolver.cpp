@@ -9,14 +9,9 @@ Poisson2DSolver::Poisson2DSolver()
 
 Poisson2DSolver::~Poisson2DSolver()
 {
-    delete[] AHat;
-    delete[] xHat;
-    delete[] bHat;
-    
-    delete[] topBC;
-    delete[] bottomBC;
-    delete[] leftBC;
-    delete[] rightBC;
+    delete[] A;
+    delete[] x;
+    delete[] b;
 }
 
 void PrintMatrix2(double* mat, int rows, int cols, bool isRowMajor) {
@@ -33,9 +28,24 @@ void PrintMatrix2(double* mat, int rows, int cols, bool isRowMajor) {
     cout << endl;
 }
 
+void Poisson2DSolver::Initialise(double* xVec, double* bVec, unsigned int bnx, unsigned int bny)
+{
+    x = xVec;
+    b = bVec;
+    
+    bHatNx = bnx-2;
+    bHatNy = bny-2;
+}
+
+void Poisson2DSolver::InitialiseMPI()
+{
+}
+
 void Poisson2DSolver::GenerateScalapackMatrixAHat(double alpha, double beta, double gamma)
 {
-    AHat = new double[bHatNx*bHatNy*(bHatNy*2+1)]();
+    aHatNx = bHatNx*bHatNy;
+    aHatNy = (bHatNy*2+1);
+    A = new double[aHatNx*aHatNy]();
     for (unsigned int i=0; i<bHatNy*bHatNx; i++) {
         /* Column-major storage of laplacian banded symmetric matrix for interiorNx=3, interiorNy=3
          | *  *  *  *  *  *  *  *  * |
@@ -49,28 +59,13 @@ void Poisson2DSolver::GenerateScalapackMatrixAHat(double alpha, double beta, dou
          Where the repeating cell is of size interiorNy*(interiorNy+1) and is repeated interiorNx times
          */
         
-        AHat[i*(bHatNy*2+1) + bHatNy] = gamma;
+        A[i*(bHatNy*2+1) + bHatNy] = gamma;
         if ((i+1)%bHatNy!=0) {
-            AHat[i*(bHatNy*2+1) + 1 + bHatNy] = -1*beta;
+            A[i*(bHatNy*2+1) + 1 + bHatNy] = -1*beta;
         }
         if (i<bHatNy*(bHatNx-1)) {
-            AHat[i*(bHatNy*2+1) + 2*bHatNy] = -1*alpha;
+            A[i*(bHatNy*2+1) + 2*bHatNy] = -1*alpha;
         }
     }
-}
-
-void Poisson2DSolver::SetBoundaryConditions(double* topbc, double* bottombc, unsigned int bhatnx, double* leftbc, double* rightbc, unsigned int bhatny)
-{
-    topBC = topbc;
-    bottomBC = bottombc;
-    leftBC = leftbc;
-    rightBC = rightbc;
-    
-    bHatNx = bhatnx;
-    bHatNy = bhatny;
-}
-
-void Poisson2DSolver::ApplyBoundaryConditions()
-{
-    
+    PrintMatrix2(A,bHatNy,bHatNx,false);
 }
