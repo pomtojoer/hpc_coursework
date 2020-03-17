@@ -45,10 +45,6 @@ private:
     double* s;
     
     // Additional variables
-    double alpha;
-    double beta;
-    double gamma;
-    
     unsigned int narr;
     unsigned int interiorNx;
     unsigned int interiorNy;
@@ -59,10 +55,16 @@ private:
     int MPIRank;
     int MPISize;
     
+    // Variables for individual partitions to work on
     int coordArrLen;
     int* iInnerCoords;
     int* jInnerCoords;
-        
+    
+    // Variables for poisson solver
+    double* scalapackMatrix = nullptr;
+    int scalapackMatrixNx;
+    int scalapackMatrixNy;
+    
     // Private functions for solving vorticity and streamfunction
     void SetVorticityBoundaryConditions();
     void SetInteriorVorticity();

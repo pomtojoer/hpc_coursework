@@ -41,12 +41,14 @@ LidDrivenCavity::LidDrivenCavity()
 
 LidDrivenCavity::~LidDrivenCavity()
 {
+    // Deallocating memory of class arrays
     delete[] w;
     delete[] s;
 }
 
 void LidDrivenCavity::SetMPIConfig()
 {
+    // Checking if MPI was initially initalised
     MPI_Initialized(&MPIInitialised);
     if (!MPIInitialised){
         cout << "Error: MPI was not initialisde." << endl;
@@ -56,16 +58,18 @@ void LidDrivenCavity::SetMPIConfig()
         MPI_Comm_rank(MPI_COMM_WORLD, &MPIRank);
         MPI_Comm_size(MPI_COMM_WORLD, &MPISize);
         
+        // Checking if serial or parallel
         if (MPISize > 1) {
+            // Calculating the number of elemets to allocate to each bin (partition)
             int spacing = (int) floor((double) interiorNarr / (double)MPISize);
             int remainder = (int)interiorNarr%MPISize;
             
             int tag = 0;
             int source = 0;
             
+            // Generating the coordinate pairs and allocating to the bins from the root
             if (MPIRank == source) {
                 // Generating i-j inner coordinate pairs
-                
                 int* iCoord = new int[interiorNarr];
                 int* jCoord = new int[interiorNarr];
                 for (unsigned int i=0; i<interiorNx; i++) {
@@ -75,6 +79,7 @@ void LidDrivenCavity::SetMPIConfig()
                     }
                 }
                 
+                // Calculating the start and end points of the bins
                 int* startingPositions = new int [MPISize];
                 int* endingPositions = new int [MPISize];
                 
@@ -89,6 +94,7 @@ void LidDrivenCavity::SetMPIConfig()
                     endingPositions[i] = currentLocation-1;
                 }
                 
+                // Sending the array of binned i,j coordinates to the different processes
                 for (int dest=0; dest<MPISize; dest++) {
                     int startPos = startingPositions[dest];
                     int endPos = endingPositions[dest];
@@ -116,13 +122,13 @@ void LidDrivenCavity::SetMPIConfig()
                 
                 delete[] iCoord;
                 delete[] jCoord;
-            }
-            else {
-               MPI_Recv(&coordArrLen, 1, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-               iInnerCoords = new int[coordArrLen];
-               jInnerCoords = new int[coordArrLen];
-               MPI_Recv(iInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-               MPI_Recv(jInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            } else {
+                // Receiving the binned i,j coordinates from the root
+                MPI_Recv(&coordArrLen, 1, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                iInnerCoords = new int[coordArrLen];
+                jInnerCoords = new int[coordArrLen];
+                MPI_Recv(iInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(jInnerCoords, coordArrLen, MPI_INT, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
         }
     }
@@ -130,12 +136,15 @@ void LidDrivenCavity::SetMPIConfig()
 
 void LidDrivenCavity::SetDomainSize(double xlen, double ylen)
 {
+    // Function to set the length of the domain in xy directions
     Lx = xlen;
     Ly = ylen;
 }
 
 void LidDrivenCavity::SetGridSize(unsigned int nx, unsigned int ny)
 {
+    // Function to set the grid size in the xy domain.
+    // The function also calculates and sets other useful variables.
     Nx = nx;
     Ny = ny;
     
@@ -149,27 +158,27 @@ void LidDrivenCavity::SetGridSize(unsigned int nx, unsigned int ny)
 
 void LidDrivenCavity::SetTimeStep(double deltat)
 {
+    // Function to set the time step
     dt = deltat;
 }
 
 void LidDrivenCavity::SetFinalTime(double finalt)
 {
+    // Function to set the final time
     T = finalt;
 }
 
 void LidDrivenCavity::SetReynoldsNumber(double re)
 {
+    // Function to set the reynolds number
     Re = re;
 }
 
 void LidDrivenCavity::SetGridSpacing(double deltax, double deltay)
 {
+    // Function to set the grid spacing
     dx = deltax;
     dy = deltay;
-    
-    alpha = 1 / dx / dx;
-    beta = 1 / dy / dy;
-    gamma = 2*(alpha+beta);
 }
 
 void LidDrivenCavity::Initialise()
@@ -238,14 +247,40 @@ void LidDrivenCavity::UpdateInteriorVorticity()
 {
     double* temp = new double[narr]{};
     
-    for (unsigned int i=1; i<(Nx-1); i++) {
-        for (unsigned int j=1; j<(Ny-1); j++) {
+    if (MPISize > 1) {
+        MPI_Bcast(w, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        for (int k=0; k<coordArrLen; k++) {
+            int i = iInnerCoords[k];
+            int j = jInnerCoords[k];
             double term1 = (s[(i+1)*Ny+j]-s[(i-1)*Ny+j])*(w[i*Ny+(j+1)]-w[i*Ny+(j-1)]);
             double term2 = (s[i*Ny+(j+1)]-s[i*Ny+(j-1)])*(w[(i+1)*Ny+j]-w[(i-1)*Ny+j]);
             double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dx/dx;
             double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dy/dy;
             
             temp[i*Nx+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
+        }
+        
+        if (MPIRank>0) {
+            MPI_Send(temp, narr, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+        } else {
+            for (int src=1; src<MPISize; src++) {
+                double* tempW = new double[narr];
+                MPI_Recv(tempW, narr, MPI_DOUBLE, src, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                cblas_daxpy(narr, 1.0, tempW, 1, temp, 1);
+                delete[] tempW;
+            }
+        }
+        
+    } else {
+        for (unsigned int i=1; i<(Nx-1); i++) {
+            for (unsigned int j=1; j<(Ny-1); j++) {
+                double term1 = (s[(i+1)*Ny+j]-s[(i-1)*Ny+j])*(w[i*Ny+(j+1)]-w[i*Ny+(j-1)]);
+                double term2 = (s[i*Ny+(j+1)]-s[i*Ny+(j-1)])*(w[(i+1)*Ny+j]-w[(i-1)*Ny+j]);
+                double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dx/dx;
+                double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dy/dy;
+                
+                temp[i*Nx+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
+            }
         }
     }
     
@@ -257,12 +292,32 @@ void LidDrivenCavity::Integrate()
 {
     double* news = new double[narr];
     
-    // Note that in our case we do not need to impose the boundary conditions on the w matrix
-    // due to the fact that the edges of the s matrix are always zeros (stream function zero)
-//    Poisson2DSolver* poissonSolver = new Poisson2DSolver();
-//    poissonSolver->Initialise(news, w, Nx, Ny);
-//    poissonSolver->InitialiseMPI();
-//    poissonSolver->GenerateScalapackMatrixAHat(alpha,beta,gamma);
+    double alpha = 1 / dx / dx;
+    double beta = 1 / dy / dy;
+    double gamma = 2*(alpha+beta);
+    
+    Poisson2DSolver* poissonSolver = new Poisson2DSolver();
+    poissonSolver->SetVariables((int)Nx,(int)Ny);
+    if (MPISize > 1) {
+        if (MPIRank==0) {
+            poissonSolver->GenerateScalapackMatrixAHat(alpha,beta,gamma);
+            scalapackMatrix = poissonSolver->GetScalapackMatrixAHat();
+            scalapackMatrixNx = poissonSolver->GetScalapackMatrixAHatNx();
+            scalapackMatrixNy = poissonSolver->GetScalapackMatrixAHatNy();
+        }
+        MPI_Bcast(&scalapackMatrixNx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&scalapackMatrixNy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        if (MPIRank > 0) {
+            scalapackMatrix = new double[scalapackMatrixNx*scalapackMatrixNy];
+        }
+        MPI_Bcast(scalapackMatrix, scalapackMatrixNx * scalapackMatrixNy, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        if (MPIRank > 0) {
+            poissonSolver->SetScalapackMatrixAHat(scalapackMatrix, scalapackMatrixNx, scalapackMatrixNy);
+        }
+    } else {
+        poissonSolver->GenerateScalapackMatrixAHat(alpha,beta,gamma);
+    }
+    
     
     if (MPIRank==0) {
         cout << "At initial" << endl;
@@ -289,43 +344,32 @@ void LidDrivenCavity::Integrate()
         cout << "psi" << endl;
         PrintMatrix(s,Ny,Nx,false);
     }
-//    cout << "omega" << endl;
-//    PrintMatrix(w,Ny,Nx,false);
-//    cout << "psi" << endl;
-//    PrintMatrix(s,Ny,Nx,false);
-//
-//    UpdateInteriorVorticity();
-//    cout << "After setting vorticity at t+dt" << endl;
-//    cout << "omega" << endl;
-//    PrintMatrix(w,Ny,Nx,false);
-//    cout << "psi" << endl;
-//    PrintMatrix(s,Ny,Nx,false);
-    
-//    poissonSolver->ApplyBoundaryConditions();
-//
-//    cout << "Testing started here" << endl;
-//    printVector(psiTop,interiorNx);
-//    printVector(psiBottom,interiorNx);
-//    printVector(psiLeft,interiorNy);
-//    printVector(psiRight,interiorNy);
-//    PrintMatrix(psiInterior,interiorNy,interiorNx,false);
-//    cout << endl;
-//    printVector(omegaTop,interiorNx);
-//    printVector(omegaBottom,interiorNx);
-//    printVector(omegaLeft,interiorNy);
-//    printVector(omegaRight,interiorNy);
-//    PrintMatrix(omegaInterior,interiorNy,interiorNx,false);
-    
-    if (MPISize>1) {
-        if (MPIRank>0) {
-            int source = 0;
-            MPI_Recv(s, narr, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        } else {
-            for (int dest=1; dest<MPISize; dest++) {
-                MPI_Send(s, narr, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
-            }
-        }
+
+    UpdateInteriorVorticity();
+    if (MPIRank==0) {
+        cout << "After setting vorticity at t+dt" << endl;
+        cout << "omega" << endl;
+        PrintMatrix(w,Ny,Nx,false);
+        cout << "psi" << endl;
+        PrintMatrix(s,Ny,Nx,false);
     }
+    
+    if (MPISize > 1) {
+        MPI_Bcast(w, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    }
+    
+//    poissonSolver->Initialise(news, w, Nx, Ny);
+    
+//    if (MPISize>1) {
+//        if (MPIRank>0) {
+//            int source = 0;
+//            MPI_Recv(s, narr, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//        } else {
+//            for (int dest=1; dest<MPISize; dest++) {
+//                MPI_Send(s, narr, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
+//            }
+//        }
+//    }
 }
 
 void LidDrivenCavity::GeneratePlots()

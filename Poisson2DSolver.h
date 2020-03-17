@@ -18,18 +18,25 @@ public:
     ~Poisson2DSolver();
     
     void GenerateScalapackMatrixAHat(double alpha, double beta, double gamma);
-    void Initialise(double* xVec, double* bVec, unsigned int bnx, unsigned int bny);
+    double* GetScalapackMatrixAHat();
+    int GetScalapackMatrixAHatNx();
+    int GetScalapackMatrixAHatNy();
+    void SetScalapackMatrixAHat(double* ahat, int ahatnx, int ahatny);
+    void SetVariables(int nx, int ny);
+    void SetVectors(double* xhat, double* bVec);
     void InitialiseMPI();
     
 private:
-    double* A = nullptr;
-    double* x = nullptr;
+    double* AHat = nullptr;
+    double* xHat = nullptr;
     double* b = nullptr;
     
-    unsigned int bHatNx;
-    unsigned int bHatNy;
-    unsigned int aHatNx;
-    unsigned int aHatNy;
+    int Nx;
+    int Ny;
+    int bHatNx;
+    int bHatNy;
+    int aHatNx;
+    int aHatNy;
     
     double* topBC = nullptr;
     double* bottomBC = nullptr;
