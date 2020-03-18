@@ -49,6 +49,7 @@ LidDrivenCavity::~LidDrivenCavity()
 void LidDrivenCavity::SetMPIConfig()
 {
     // Checking if MPI was initially initalised
+    int MPIInitialised;
     MPI_Initialized(&MPIInitialised);
     if (!MPIInitialised){
         cout << "Error: MPI was not initialisde." << endl;
@@ -154,6 +155,13 @@ void LidDrivenCavity::SetGridSize(unsigned int nx, unsigned int ny)
     interiorNy = Ny-2;
     
     interiorNarr = interiorNx * interiorNy;
+}
+
+void LidDrivenCavity::SetPartitionSize(unsigned int px, unsigned int py)
+{
+    // Function to set the partition size in the xy domain.
+    Px = px;
+    Py = py;
 }
 
 void LidDrivenCavity::SetTimeStep(double deltat)
@@ -312,6 +320,7 @@ void LidDrivenCavity::Integrate()
         if (MPIRank > 0) {
             poissonSolver->SetScalapackMatrixAHat(scalapackMatrix, scalapackMatrixNx, scalapackMatrixNy);
         }
+        poissonSolver->InitialiseScalapack(Px,Py);
     } else {
         poissonSolver->GenerateLapackMatrixAHat();
     }
@@ -320,36 +329,36 @@ void LidDrivenCavity::Integrate()
     if (MPIRank==0) {
         cout << "At initial" << endl;
         cout << "omega" << endl;
-//        PrintMatrix(w,Ny,Nx,false);
+        PrintMatrix(w,Ny,Nx,false);
         cout << "psi" << endl;
-//        PrintMatrix(s,Ny,Nx,false);
+        PrintMatrix(s,Ny,Nx,false);
     }
 
     SetVorticityBoundaryConditions();
     if (MPIRank==0) {
         cout << "After setting BC" << endl;
         cout << "omega" << endl;
-//        PrintMatrix(w,Ny,Nx,false);
+        PrintMatrix(w,Ny,Nx,false);
         cout << "psi" << endl;
-//        PrintMatrix(s,Ny,Nx,false);
+        PrintMatrix(s,Ny,Nx,false);
     }
 
     SetInteriorVorticity();
     if (MPIRank==0) {
         cout << "After setting vorticity at t" << endl;
         cout << "omega" << endl;
-//        PrintMatrix(w,Ny,Nx,false);
+        PrintMatrix(w,Ny,Nx,false);
         cout << "psi" << endl;
-//        PrintMatrix(s,Ny,Nx,false);
+        PrintMatrix(s,Ny,Nx,false);
     }
 
     UpdateInteriorVorticity();
     if (MPIRank==0) {
         cout << "After setting vorticity at t+dt" << endl;
         cout << "omega" << endl;
-//        PrintMatrix(w,Ny,Nx,false);
+        PrintMatrix(w,Ny,Nx,false);
         cout << "psi" << endl;
-//        PrintMatrix(s,Ny,Nx,false);
+        PrintMatrix(s,Ny,Nx,false);
     }
     
     if (MPISize > 1) {

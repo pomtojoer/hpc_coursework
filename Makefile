@@ -1,6 +1,6 @@
 CC = mpicxx
 CXXFLAGS = -std=c++11 -Wall -O2 -pedantic
-LDLIBS = -lboost_program_options -llapack -lblas
+LDLIBS = -lboost_program_options -llapack -lblas -lscalapack-openmpi
 HDRS = LidDrivenCavity.h Poisson2DSolver.h
 TARGET = Solve
 OBJS = LidDrivenCavitySolver.o LidDrivenCavity.o Poisson2DSolver.o

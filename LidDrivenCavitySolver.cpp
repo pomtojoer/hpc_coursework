@@ -137,6 +137,7 @@ int main(int argc, char **argv)
     // Configuring Solver
     solver->SetDomainSize(Lx,Ly);
     solver->SetGridSize(Nx,Ny);
+    solver->SetPartitionSize(Px,Py);
     solver->SetTimeStep(dt);
     solver->SetFinalTime(T);
     solver->SetReynoldsNumber(Re);

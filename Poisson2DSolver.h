@@ -26,7 +26,7 @@ public:
     void SetScalapackMatrixAHat(double* ahat, int ahatnx, int ahatny);
     void SetVariables(int nx, int ny, double alphaVar, double betaVar, double gammaVar);
     void SetVectors(double* xhat, double* bVec);
-    void InitialiseMPI();
+    void InitialiseScalapack(int px, int py);
     void SolveParallel();
     void SolveSerial();
     
@@ -45,6 +45,22 @@ private:
     int bHatNy;
     int aHatNx;
     int aHatNy;
+    
+    // MPI variables
+    int mpirank;
+    int mpisize;
+    
+    // Scalapack variables
+    int Px;
+    int Py;
+    int mype;
+    int npe;
+    int ctx;
+    int nrow;
+    int ncol;
+    int myrow;
+    int mycol;
+    
 };
 
 #endif

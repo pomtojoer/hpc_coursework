@@ -13,6 +13,7 @@ public:
 
     void SetDomainSize(double xlen, double ylen);
     void SetGridSize(unsigned int nx, unsigned int ny);
+    void SetPartitionSize(unsigned int px, unsigned int py);
     void SetTimeStep(double deltat);
     void SetFinalTime(double finalt);
     void SetReynoldsNumber(double Re);
@@ -32,6 +33,8 @@ private:
     double T;
     unsigned int Nx;
     unsigned int Ny;
+    unsigned int Px;
+    unsigned int Py;
     double Lx;
     double Ly;
     double Re;
@@ -51,7 +54,6 @@ private:
     unsigned int interiorNarr;
     
     // Variables for MPI
-    int MPIInitialised;
     int MPIRank;
     int MPISize;
     
