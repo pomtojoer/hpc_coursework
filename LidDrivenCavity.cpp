@@ -321,6 +321,7 @@ void LidDrivenCavity::Integrate()
             poissonSolver->SetScalapackMatrixAHat(scalapackMatrix, scalapackMatrixNx, scalapackMatrixNy);
         }
         poissonSolver->InitialiseScalapack(Px,Py);
+        poissonSolver->PrefactorMatrixAHat();
     } else {
         poissonSolver->GenerateLapackMatrixAHat();
     }

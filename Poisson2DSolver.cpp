@@ -26,8 +26,13 @@ extern "C" {
     void F77NAME(pdgbtrs)(const char& trans, const int& n, const int& bwl,
                           const int& bwu, const int& nrhs, double* A,
                           const int& ja, int* desca, int* ipiv,
-                          double* b, int& ib, int* descb, double* af, int& laf,
+                          double* b, const int& ib, int* descb, double* af, int& laf,
                           double* work, int& lwork, int& info);
+
+    void F77NAME(pdgbsv)(const int& n, const int& bwl, const int& bwu,
+                         const int& nrhs, double* A, const int& ja,
+                         int* desca, int* ipiv, double* b, const int& ib, int* descb,
+                         double* work, int& lwork, int& info);
 
     // BLACS declaration
     void Cblacs_pinfo(int*, int*);
@@ -75,7 +80,7 @@ void Poisson2DSolver::SetVariables(int nx, int ny, double alphaVar, double betaV
     alpha = alphaVar;
     beta = betaVar;
     gamma =gammaVar;
-    
+        
     bHatNx = Nx-2;
     bHatNy = Ny-2;
     
@@ -122,15 +127,16 @@ void Poisson2DSolver::InitialiseScalapack(int px, int py)
     Cblacs_pinfo(&mype, &npe);
     // Get the default system context (i.e. MPI_COMM_WORLD)
     Cblacs_get( 0, 0, &ctx );
-    // Initialise a process grid of Py rows and Px columns
-    Cblacs_gridinit( &ctx, &order, Py, Px );
+    // Initialise a process grid of 1 rows and Px*Py columns
+    Cblacs_gridinit( &ctx, &order, 1, Px*Py );
     // Get info about the grid to verify it is set up
     Cblacs_gridinfo( ctx, &nrow, &ncol, &myrow, &mycol);
 }
 
 void Poisson2DSolver::GenerateScalapackMatrixAHat()
 {
-    AHat = new double[aHatNx*aHatNy];
+    // Initialise with all zeros
+    AHat = new double[aHatNx*aHatNy]{};
     
     for (int i=0; i<aHatNx; i++) {
         /* Column-major storage of laplacian banded symmetric matrix for interiorNx=3, interiorNy=3
@@ -169,12 +175,13 @@ void Poisson2DSolver::GenerateScalapackMatrixAHat()
         if (i>bHatNy-1) {
             AHat[i*aHatNy + 2*bHatNy] = -1*alpha;
         }
+        
     }
 }
 
 void Poisson2DSolver::GenerateLapackMatrixAHat()
 {
-    AHat = new double[aHatNx*aHatNy]();
+    AHat = new double[aHatNx*aHatNy]{};
     
     for (int i=0; i<aHatNx; i++) {
         /* Column-major storage of laplacian banded symmetric matrix for interiorNx=3, interiorNy=3
@@ -240,49 +247,94 @@ void Poisson2DSolver::SetScalapackMatrixAHat(double* ahat, int ahatnx, int ahatn
     aHatNy = ahatny;
 }
 
+void Poisson2DSolver::PrefactorMatrixAHat() {
+    n = bHatNy*bHatNx;  // (global) Total problem size
+    nb = bHatNy*2+1;    // Blocking size (number of columns per process)
+    bwl = bHatNy;       // (global) Lower bandwidth
+    bwu = bHatNy;       // (global) Upper bandwidth
+    ja = 1;             // Start offset in matrix (fortran starts at 1)
+    int info;           // Variable to store success
+    
+    // Generating ipiv
+    ipiv = new int[nb];
+    
+    // Filling desca
+    desca[0] = 501;             // banded matrix (1-by-P process grid)
+    desca[1] = ctx;             // Context
+    desca[2] = n;               // (global) Size of matrix being distributed
+    desca[3] = nb;              // Blocking of matrix
+    desca[4] = 0;               // Process column of first first column of distributed A
+    desca[5] = 1+2*bwl+2*bwu;   // Local leading dim
+    desca[6] = 0;               // Reserved
+    
+    // Filling localAhat
+    prefactoredAHat = new double[aHatNy*nb]{};
+    int offseta = nb*mype*aHatNy;
+    for (int i=0; i<nb; i++) {
+        for (int j=0; j<aHatNy; j++) {
+            if ((i*aHatNy+j+offseta) < (aHatNy*aHatNx)) {
+                prefactoredAHat[i*aHatNy+j] = AHat[i*aHatNy+j+offseta];
+            }
+        }
+    }
+    
+    // Generating af
+    laf = (nb+bwu)*(bwl+bwu)+6*(bwl+bwu)*(bwl+2*bwu);
+    af = new double[laf];
+    
+    // Query for optimal workspace
+    int lwork = -1;
+    double workopt;
+    F77NAME(pdgbtrf)(n, bwl, bwu, prefactoredAHat, ja, desca, ipiv, af, laf, &workopt, lwork, info);
+    
+    // allocating optimal workspace
+    lwork = (int)workopt;
+    double* work = new double[lwork];
+    
+    // Factorising and solving matrix
+    F77NAME(pdgbtrf)(n, bwl, bwu, prefactoredAHat, ja, desca, ipiv, af, laf, work, lwork, info);
+    if (info) {
+        cout << "Error occurred in PDGBTRF: " << info << endl;
+    }
+}
+
 void Poisson2DSolver::SolveParallel() {
     cout << "Proc " << mpirank << "/" << mpisize << " for MPI, proc " << mype << "/" << npe << " for BLACS in position " << "(" << myrow << "," << mycol << ")/(" << nrow << "," << ncol << ") with local matrix " << endl;
     
-    int info; // Status value
-    const int n = bHatNy*bHatNx; // Total problem size
-    const int nb = (int)ceil(n/(Px*Py)); // Blocking size (number of columns per process)
-    const int bwl = bHatNy; // Lower bandwidth
-    const int bwu = bHatNy; // Upper bandwidth
     const int nrhs = 1; // Number of RHS to solve
-    const int ja = 1; // Start offset in matrix (fortran starts at 1)
-    const int ib = 0; // Start offset in RHS vector (fortran starts at 1)
-    const int la = (1 + 2*bwl + 2*bwu)*nb;
-    int laf = (nb+bwu)*(bwl+bwu)+6*(bwl+bwu)*(bwl+2*bwu); // ScaLAPACK documentation
+    double* localbhat;  // Local array b
+    const int ib = 1;   // Start offset in RHS vector (fortran starts at 1)
+    int descb[7];       // Descriptor for RHS
+    int info;           // Status value
     
-    int desca[7];
-    desca[0] = 501;     // banded matrix (1-by-P process grid)
-    desca[1] = ctx;     // Context
-    desca[2] = n;       // Problem size
-    desca[3] = nb; // Blocking of matrix
-    desca[4] = 0; // Process row/column
-    desca[5] = 1+2*bwl+2*bwu; // Local leading dim
-    desca[6] = 0; // Reserved
-        
-    int descb[7]; // Descriptor for RHS
+    // Filling local Bhat
+    localbhat = new double[nb]{};
+    int offsetb = nb*mype;
+    for (int i=0; i<nb; i++) {
+        if ((i+offsetb) < (bHatNx*bHatNy)) {
+            localbhat[i] = bHat[i+offsetb];
+        }
+    }
+    
+    // Filling descb
     descb[0] = 502; // Type
     descb[1] = ctx; // Context
-    descb[2] = n; // Problem size
-    descb[3] = nb; // Blocking of matrix
-    descb[4] = 0; // Process row/column
-    descb[5] = nb; // Local leading dim
-    descb[6] = 0; // Reserved
-
-//    int lwork = -1;
-    int lwork = 10;
-    double* work;
-    int* ipiv = new int [nb]; // Pivoting array
-    double* af = new double[laf];
+    descb[2] = n;   // Problem size
+    descb[3] = nb;  // Blocking of matrix
+    descb[4] = 0;   // Process row/column
+    descb[5] = nb;  // Local leading dim
+    descb[6] = 0;   // Reserved
     
     
-    F77NAME(pdgbtrf)(n, bwl, bwu, AHat, ja, desca, ipiv, af, laf, work, lwork, info);
-//    lwork = work[0];
-//    work = new double[lwork];
-//
+    int lwork = (nb+bwu)*(bwl+bwu)+6*(bwl+bwu)*(bwl+2*bwu);
+    double* work = new double[lwork];
+    F77NAME(pdgbtrs)('N', n, bwl, bwu, nrhs, prefactoredAHat, ja, desca, ipiv, localbhat, ib, descb, af, laf, work, lwork, info);
+    
+    if (info) {
+        cout << "Error occurred in PDGBTRS: " << info << endl;
+    }
+    
+    
 }
 
 void Poisson2DSolver::SolveSerial() {
