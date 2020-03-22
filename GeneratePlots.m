@@ -1,5 +1,4 @@
 clc;
-clear; 
 close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex');

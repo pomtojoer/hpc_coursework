@@ -219,7 +219,6 @@ void LidDrivenCavity::SetVorticityBoundaryConditions()
             w[i+Ny*(Nx-1)] = (s[i+Ny*(Nx-1)]-s[i+Ny*(Nx-2)]) * 2/dx/dx;
         }
     }
-    cout << w[12] << endl;
 }
 
 void LidDrivenCavity::SetInteriorVorticity()
@@ -339,40 +338,40 @@ void LidDrivenCavity::Integrate()
             cout << tnow << "######################################################################x"<< endl;
         }
         
-        if (MPIRank==0) {
-            cout << "At initial" << endl;
-            cout << "omega" << endl;
-            PrintMatrix(w,Ny,Nx,false);
-            cout << "psi" << endl;
-            PrintMatrix(s,Ny,Nx,false);
-        }
+//        if (MPIRank==0) {
+//            cout << "At initial" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
 
         SetInteriorVorticity();
-        if (MPIRank==0) {
-            cout << "After setting vorticity at t" << endl;
-            cout << "omega" << endl;
-            PrintMatrix(w,Ny,Nx,false);
-            cout << "psi" << endl;
-            PrintMatrix(s,Ny,Nx,false);
-        }
+//        if (MPIRank==0) {
+//            cout << "After setting vorticity at t" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
 
         SetVorticityBoundaryConditions();
-        if (MPIRank==0) {
-            cout << "After setting BC" << endl;
-            cout << "omega" << endl;
-            PrintMatrix(w,Ny,Nx,false);
-            cout << "psi" << endl;
-            PrintMatrix(s,Ny,Nx,false);
-        }
+//        if (MPIRank==0) {
+//            cout << "After setting BC" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
         
         UpdateInteriorVorticity();
-        if (MPIRank==0) {
-            cout << "After setting vorticity at t+dt" << endl;
-            cout << "omega" << endl;
-            PrintMatrix(w,Ny,Nx,false);
-            cout << "psi" << endl;
-            PrintMatrix(s,Ny,Nx,false);
-        }
+//        if (MPIRank==0) {
+//            cout << "After setting vorticity at t+dt" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
 
         if (MPISize > 1) {
             MPI_Bcast(w, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -391,13 +390,13 @@ void LidDrivenCavity::Integrate()
             MPI_Bcast(s, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         }
         
-        if (MPIRank==0) {
-            cout << "After solve" << endl;
-            cout << "omega" << endl;
-            PrintMatrix(w,Ny,Nx,false);
-            cout << "psi" << endl;
-            PrintMatrix(s,Ny,Nx,false);
-        }
+//        if (MPIRank==0) {
+//            cout << "After solve" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
         
         tnow += dt;
     } while (tnow < T);
