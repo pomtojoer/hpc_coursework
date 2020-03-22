@@ -405,7 +405,7 @@ void LidDrivenCavity::Integrate()
 void LidDrivenCavity::GeneratePlotData()
 {
     if (MPIRank==0) {
-        string filename = to_string((int)Lx) + "_" + to_string((int)Ly) + "_" + to_string(Nx) + "_" + to_string(Ny) + "_" + to_string((int)Re) + "_data.txt";
+        string filename = "Data/" +  to_string((int)Lx) + "_" + to_string((int)Ly) + "_" + to_string(Nx) + "_" + to_string(Ny) + "_" + to_string((int)Re) + "_data.txt";
         ofstream outputfile(filename, ios::out | ios::trunc);
         if (outputfile.is_open()) {
             // Output the initial parameters

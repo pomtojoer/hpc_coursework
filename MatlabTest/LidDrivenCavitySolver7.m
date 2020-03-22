@@ -4,7 +4,7 @@ clear;
 Lx = 1;
 Ly = 2;
 Nx = 5;
-Ny = 5;
+Ny = 7;
 dt = 0.0001;
 % dt = 0.01;
 T = 1.0;
@@ -70,7 +70,7 @@ while totalT < T
     w(1,1) = 0;
     w(Ny,1) = 0;
     w(Ny,Nx) = 0;
-    w(1,Ny) = 0;
+    w(1,Nx) = 0;
     
     % ##################### calculating interior vorticity at t+dt ##################### 
     % iteratively

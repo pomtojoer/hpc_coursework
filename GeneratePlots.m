@@ -86,6 +86,14 @@ for i=1:length(filenames)
     
     xmin(i) = xcoord(s==min(s,[],'all'));
     ymin(i) = ycoord(s==min(s,[],'all'));
+    
+    
+    splot = str2num("24" + (i*2));
+    wplot = str2num("24" + (i*2-1));
+    figure(10)
+    hold on
+    subplot(splot), contour(((s))), axis('square'), title("streamfunction @"+plotlabel);
+    subplot(wplot), contour(((w))), axis('square'), title("vorticity @"+plotlabel);    
 end
 
 figure(1)
@@ -152,6 +160,7 @@ for i=1:length(filenames2)
 
     figure(5+i)
     contourf(xcoord,ycoord,s);
+    daspect([1 1 1])
 end
 
 figure(6)
@@ -167,3 +176,8 @@ xlabel("x");
 ylabel("y");
 colorbar("eastoutside");
 saveas(gcf,'Images/lx2ly1.png');
+
+disp('x location of min');
+disp(xmin');
+disp('y location of min');
+disp(ymin');

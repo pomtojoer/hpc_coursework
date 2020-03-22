@@ -1,5 +1,4 @@
 clc;
-clear; 
 close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex');
@@ -87,6 +86,14 @@ for i=1:length(filenames)
     
     xmin(i) = xcoord(s==min(s,[],'all'));
     ymin(i) = ycoord(s==min(s,[],'all'));
+    
+    figure(0)
+    splot = str2num("42" + i);
+    splot = str2num("42" + i);
+    
+    subplot(422), contour(((s))), axis('square'), title("streamfunction");
+    subplot(421), contour(((w))), axis('square'), title("vorticity");    
+    
 end
 
 figure(1)
@@ -148,7 +155,23 @@ for i=1:length(filenames2)
     
     xgrid = linspace(0,Lx,Nx);
     ygrid = linspace(0,Ly,Ny);
+    
+    [xcoord,ycoord] = meshgrid(xgrid,ygrid);
 
     figure(5+i)
     contourf(xcoord,ycoord,s);
 end
+
+figure(6)
+title('Contour plot for vorticity at $Re=100,\,L_x=1,\,L_y=2$ on a 161x161 grid');
+xlabel("x");
+ylabel("y");
+colorbar("eastoutside");
+saveas(gcf,'Images/lx1ly2.png');
+
+figure(7)
+title('Contour plot for streamfunction at $Re=100,\,L_x=2,\,L_y=1$ on a 161x161 grid');
+xlabel("x");
+ylabel("y");
+colorbar("eastoutside");
+saveas(gcf,'Images/lx2ly1.png');
