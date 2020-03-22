@@ -22,7 +22,7 @@ public:
 
     void Initialise();
     void Integrate();
-    void GeneratePlots();
+    void GeneratePlotData();
     
 private:
     // Given constants

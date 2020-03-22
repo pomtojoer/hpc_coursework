@@ -2,9 +2,11 @@
 #include "Poisson2DSolver.h"
 #include "cblas.h"
 #include "mpi.h"
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <string>
 
 void PrintMatrix(double* mat, int rows, int cols, bool isRowMajor) {
     for (int i=0; i<rows; i++) {
@@ -194,7 +196,7 @@ void LidDrivenCavity::Initialise()
     // Initialise as zeros array for initial conditions
     // t = 0, omega(x,y) = 0, psi(x,y) = 0
     w = new double[narr]{};
-    s = new double[narr]{7,49,73,58,30,72,44,78,23,9,40,65,92,42,87,3,27,29,40,12,3,69,9,57,60};
+    s = new double[narr]{};//{7,49,73,58,30,72,44,78,23,9,40,65,92,42,87,3,27,29,40,12,3,69,9,57,60};
 }
 
 
@@ -222,24 +224,27 @@ void LidDrivenCavity::SetVorticityBoundaryConditions()
 void LidDrivenCavity::SetInteriorVorticity()
 {
     if (MPISize > 1) {
+        double* tempW = new double[narr]{};
 //        cout << "Rank " << MPIRank << " Start: " << startingPosition << " End: " << endingPosition << endl;
         for (int k=0; k<coordArrLen; k++) {
             int i = iInnerCoords[k];
             int j = jInnerCoords[k];
             
-            w[i*Nx+j] = -(s[i*Nx+(j+1)]-2*s[i*Nx+(j)]+s[i*Nx+(j-1)]) /dx/dx - (s[(i+1)*Nx+j]-2*s[i*Nx+j]+s[(i-1)*Nx+j]) /dy/dy;
+            tempW[i*Nx+j] = -(s[i*Nx+(j+1)]-2*s[i*Nx+(j)]+s[i*Nx+(j-1)]) /dx/dx - (s[(i+1)*Nx+j]-2*s[i*Nx+j]+s[(i-1)*Nx+j]) /dy/dy;
         }
         
         if (MPIRank>0) {
-            MPI_Send(w, narr, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+            MPI_Send(tempW, narr, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         } else {
             for (int src=1; src<MPISize; src++) {
-                double* tempW = new double[narr];
-                MPI_Recv(tempW, narr, MPI_DOUBLE, src, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                cblas_daxpy(narr, 1.0, tempW, 1, w, 1);
-                delete[] tempW;
+                double* tempWseg = new double[narr]{};
+                MPI_Recv(tempWseg, narr, MPI_DOUBLE, src, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                cblas_daxpy(narr, 1.0, tempWseg, 1, tempW, 1);
+                delete[] tempWseg;
             }
         }
+        delete[] w;
+        w = tempW;
     } else {
         for (unsigned int i=1; i<(Nx-1); i++) {
             for (unsigned int j=1; j<(Ny-1); j++) {
@@ -321,78 +326,111 @@ void LidDrivenCavity::Integrate()
             poissonSolver->SetScalapackMatrixAHat(scalapackMatrix, scalapackMatrixNx, scalapackMatrixNy);
         }
         poissonSolver->InitialiseScalapack(Px,Py);
-        poissonSolver->PrefactorMatrixAHat();
+        poissonSolver->PrefactorMatrixAHatParallel();
     } else {
         poissonSolver->GenerateLapackMatrixAHat();
+        poissonSolver->PrefactorMatrixAHatSerial();
     }
     
-    
-    if (MPIRank==0) {
-        cout << "At initial" << endl;
-        cout << "omega" << endl;
-        PrintMatrix(w,Ny,Nx,false);
-        cout << "psi" << endl;
-        PrintMatrix(s,Ny,Nx,false);
-    }
-
-    SetVorticityBoundaryConditions();
-    if (MPIRank==0) {
-        cout << "After setting BC" << endl;
-        cout << "omega" << endl;
-        PrintMatrix(w,Ny,Nx,false);
-        cout << "psi" << endl;
-        PrintMatrix(s,Ny,Nx,false);
-    }
-
-    SetInteriorVorticity();
-    if (MPIRank==0) {
-        cout << "After setting vorticity at t" << endl;
-        cout << "omega" << endl;
-        PrintMatrix(w,Ny,Nx,false);
-        cout << "psi" << endl;
-        PrintMatrix(s,Ny,Nx,false);
-    }
-
-    UpdateInteriorVorticity();
-    if (MPIRank==0) {
-        cout << "After setting vorticity at t+dt" << endl;
-        cout << "omega" << endl;
-        PrintMatrix(w,Ny,Nx,false);
-        cout << "psi" << endl;
-        PrintMatrix(s,Ny,Nx,false);
-    }
-    
-    if (MPISize > 1) {
-        MPI_Bcast(w, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        MPI_Bcast(s, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    }
-    
-//    double* news = new double[narr];
-    poissonSolver->SetVectors(s, w);
-    if (MPISize > 1) {
-        poissonSolver->SolveParallel();
-    } else {
-        poissonSolver->SolveSerial();
-    }
-    
-    poissonSolver->Updatex(s);
-    
-    
-//    poissonSolver->Initialise(news, w, Nx, Ny);
-    
-//    if (MPISize>1) {
-//        if (MPIRank>0) {
-//            int source = 0;
-//            MPI_Recv(s, narr, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//        } else {
-//            for (int dest=1; dest<MPISize; dest++) {
-//                MPI_Send(s, narr, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
-//            }
+    double tnow = 0.0;
+    do {
+        if (MPIRank==0) {
+            cout << tnow << "######################################################################x"<< endl;
+        }
+        
+//        if (MPIRank==0) {
+//            cout << "At initial" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
 //        }
-//    }
+
+        SetInteriorVorticity();
+//        if (MPIRank==0) {
+//            cout << "After setting vorticity at t" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
+
+        SetVorticityBoundaryConditions();
+//        if (MPIRank==0) {
+//            cout << "After setting BC" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
+        
+        UpdateInteriorVorticity();
+//        if (MPIRank==0) {
+//            cout << "After setting vorticity at t+dt" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
+
+        if (MPISize > 1) {
+            MPI_Bcast(w, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        }
+
+        poissonSolver->SetVectors(s, w);
+        if (MPISize > 1) {
+            poissonSolver->SolveParallel();
+        } else {
+            poissonSolver->SolveSerial();
+        }
+        
+        poissonSolver->Updatex(s);
+        
+        if (MPISize > 1) {
+            MPI_Bcast(s, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        }
+        
+//        if (MPIRank==0) {
+//            cout << "After solve" << endl;
+//            cout << "omega" << endl;
+//            PrintMatrix(w,Ny,Nx,false);
+//            cout << "psi" << endl;
+//            PrintMatrix(s,Ny,Nx,false);
+//        }
+        
+        tnow += dt;
+    } while (tnow < T);
 }
 
-void LidDrivenCavity::GeneratePlots()
+void LidDrivenCavity::GeneratePlotData()
 {
-    
+    if (MPIRank==0) {
+        string filename = to_string((int)Lx) + "_" + to_string((int)Ly) + "_" + to_string(Nx) + "_" + to_string(Ny) + "_" + to_string((int)Re) + "_data.txt";
+        ofstream outputfile(filename, ios::out | ios::trunc);
+        if (outputfile.is_open()) {
+            // Output the initial parameters
+            outputfile << "Lx, Ly, Nx, Ny, dt, T, Re" << endl;
+            outputfile << Lx << "," << Ly <<  "," << Nx <<  "," << Ny <<  "," << dt <<  "," << T <<  "," << Re << endl;
+            
+            // Output of the vorticity
+            outputfile << endl << "wdata" << endl;
+            for (unsigned int j=0; j<Ny; j++) {
+                for (unsigned int i=0; i<Nx; i++) {
+                    outputfile << w[j+i*Ny] << "    ";
+                }
+                outputfile << endl;
+            }
+            cout << endl;
+            
+            // Output of the streamfunction
+            outputfile << endl << "sdata" << endl;
+            for (unsigned int j=0; j<Ny; j++) {
+                for (unsigned int i=0; i<Nx; i++) {
+                    outputfile << s[j+i*Ny] << "    ";
+                }
+                outputfile << endl;
+            }
+            cout << endl;
+        }
+    }
 }

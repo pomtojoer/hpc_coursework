@@ -27,8 +27,9 @@ public:
     void SetVariables(int nx, int ny, double alphaVar, double betaVar, double gammaVar);
     void SetVectors(double* xhat, double* bVec);
     void InitialiseScalapack(int px, int py);
-    void PrefactorMatrixAHat();
+    void PrefactorMatrixAHatParallel();
     void SolveParallel();
+    void PrefactorMatrixAHatSerial();
     void SolveSerial();
     
 private:
@@ -64,16 +65,18 @@ private:
     int mycol;
     
     // Solve
+    int m;
     int n;
     int nb;
     int bwl;
     int bwu;
     int ja;
     int desca[7];
+    int lda;
     
-    double* prefactoredAHat;
-    int* ipiv;
-    double* af;
+    double* prefactoredAHat = nullptr;
+    int* ipiv = nullptr;
+    double* af = nullptr;
     int laf;
 };
 

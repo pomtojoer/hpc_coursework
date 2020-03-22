@@ -28,17 +28,23 @@ extern "C" {
                           const int& ja, int* desca, int* ipiv,
                           double* b, const int& ib, int* descb, double* af, int& laf,
                           double* work, int& lwork, int& info);
+    
+    // For sending and receiving matrix
+    void F77NAME(dgesd2d)(const int& icontxt, const int& m, const int& n,
+                          double* A, const int& lda, const int& rdest,
+                          int& cdest);
 
-    void F77NAME(pdgbsv)(const int& n, const int& bwl, const int& bwu,
-                         const int& nrhs, double* A, const int& ja,
-                         int* desca, int* ipiv, double* b, const int& ib, int* descb,
-                         double* work, int& lwork, int& info);
+    void F77NAME(dgerv2d)(const int& icontxt, const int& m, const int& n,
+                          double* A, const int& lda, const int& rsrc,
+                          int& csrc);
+
 
     // BLACS declaration
     void Cblacs_pinfo(int*, int*);
     void Cblacs_get(int, int, int*);
     void Cblacs_gridinit(int*, const char*, int, int);
     void Cblacs_gridinfo(int, int*, int*, int*, int*);
+    void Cblacs_gridexit(int);
 }
 
 Poisson2DSolver::Poisson2DSolver()
@@ -50,6 +56,12 @@ Poisson2DSolver::~Poisson2DSolver()
     delete[] AHat;
     delete[] xHat;
     delete[] bHat;
+    
+    delete[] prefactoredAHat;
+    delete[] ipiv;
+    delete[] af;
+    
+    Cblacs_gridexit(ctx);
 }
 
 void PrintMatrix2(double* mat, int rows, int cols, bool isRowMajor) {
@@ -84,11 +96,8 @@ void Poisson2DSolver::SetVariables(int nx, int ny, double alphaVar, double betaV
     bHatNx = Nx-2;
     bHatNy = Ny-2;
     
-    aHatNx = bHatNx*bHatNy;
-    aHatNy = (bHatNy*4+1);
-    
-    bHat = new double[bHatNx*bHatNy];
-    xHat = new double[bHatNx*bHatNy];
+    bHat = new double[bHatNx*bHatNy]{};
+    xHat = new double[bHatNx*bHatNy]{};
 }
 
 void Poisson2DSolver::SetVectors(double* xVec, double* bVec)
@@ -136,6 +145,8 @@ void Poisson2DSolver::InitialiseScalapack(int px, int py)
 void Poisson2DSolver::GenerateScalapackMatrixAHat()
 {
     // Initialise with all zeros
+    aHatNx = bHatNx*bHatNy;
+    aHatNy = (bHatNy*4+1);
     AHat = new double[aHatNx*aHatNy]{};
     
     for (int i=0; i<aHatNx; i++) {
@@ -181,6 +192,8 @@ void Poisson2DSolver::GenerateScalapackMatrixAHat()
 
 void Poisson2DSolver::GenerateLapackMatrixAHat()
 {
+    aHatNx = bHatNx*bHatNy;
+    aHatNy = (bHatNy*3+1);
     AHat = new double[aHatNx*aHatNy]{};
     
     for (int i=0; i<aHatNx; i++) {
@@ -247,17 +260,14 @@ void Poisson2DSolver::SetScalapackMatrixAHat(double* ahat, int ahatnx, int ahatn
     aHatNy = ahatny;
 }
 
-void Poisson2DSolver::PrefactorMatrixAHat() {
+void Poisson2DSolver::PrefactorMatrixAHatParallel() {
     n = bHatNy*bHatNx;  // (global) Total problem size
-    nb = bHatNy*2+1;    // Blocking size (number of columns per process)
+    nb = max(bHatNy*2+1, (int)ceil((double)n/(double)npe));    // Blocking size (number of columns per process)
     bwl = bHatNy;       // (global) Lower bandwidth
     bwu = bHatNy;       // (global) Upper bandwidth
     ja = 1;             // Start offset in matrix (fortran starts at 1)
     int info;           // Variable to store success
-    
-    // Generating ipiv
-    ipiv = new int[nb];
-    
+        
     // Filling desca
     desca[0] = 501;             // banded matrix (1-by-P process grid)
     desca[1] = ctx;             // Context
@@ -277,7 +287,7 @@ void Poisson2DSolver::PrefactorMatrixAHat() {
             }
         }
     }
-    
+
     // Generating af
     laf = (nb+bwu)*(bwl+bwu)+6*(bwl+bwu)*(bwl+2*bwu);
     af = new double[laf];
@@ -285,21 +295,27 @@ void Poisson2DSolver::PrefactorMatrixAHat() {
     // Query for optimal workspace
     int lwork = -1;
     double workopt;
+    
     F77NAME(pdgbtrf)(n, bwl, bwu, prefactoredAHat, ja, desca, ipiv, af, laf, &workopt, lwork, info);
     
     // allocating optimal workspace
     lwork = (int)workopt;
     double* work = new double[lwork];
     
+    // Generating ipiv. Minimum size of nb+bwu+bwl (bug described in forum http:/icl.cs.utk.edu/lapack-forum/viewtopic.php?f=13&t=2243
+    // Original documentation gives nb, but this was found to be buggy with larger array sizes
+    ipiv = new int[nb+bwu+bwl];
     // Factorising and solving matrix
     F77NAME(pdgbtrf)(n, bwl, bwu, prefactoredAHat, ja, desca, ipiv, af, laf, work, lwork, info);
+
     if (info) {
         cout << "Error occurred in PDGBTRF: " << info << endl;
     }
+    delete[] work;
 }
 
 void Poisson2DSolver::SolveParallel() {
-    cout << "Proc " << mpirank << "/" << mpisize << " for MPI, proc " << mype << "/" << npe << " for BLACS in position " << "(" << myrow << "," << mycol << ")/(" << nrow << "," << ncol << ") with local matrix " << endl;
+//    cout << "Proc " << mpirank << "/" << mpisize << " for MPI, proc " << mype << "/" << npe << " for BLACS in position " << "(" << myrow << "," << mycol << ")/(" << nrow << "," << ncol << ") with local matrix " << endl;
     
     const int nrhs = 1; // Number of RHS to solve
     double* localbhat;  // Local array b
@@ -334,21 +350,46 @@ void Poisson2DSolver::SolveParallel() {
         cout << "Error occurred in PDGBTRS: " << info << endl;
     }
     
+    if (mype > 0) {
+        int rdest = 0;
+        int cdest = 0;
+        F77NAME(dgesd2d)(ctx, nb, 1, localbhat, nb, rdest, cdest);
+    } else {
+        double* assembledB = new double[nb*npe]{};
+        cblas_dcopy(nb, localbhat, 1, assembledB, 1);
+        for (int src=1; src<npe; src++) {
+            F77NAME(dgerv2d)(ctx, nb, 1, assembledB+src*nb, nb, 0, src);
+        }
+        cblas_dcopy(bHatNx*bHatNy, assembledB, 1, xHat, 1);
+        delete[] assembledB;
+    }
     
+    delete[] work;
+    delete[] localbhat;
+}
+
+void Poisson2DSolver::PrefactorMatrixAHatSerial() {
+    m = bHatNy*bHatNx;      // Number of rows of matrix A
+    n = bHatNy*bHatNx;      // Number of columns of matrix A
+    bwl = bHatNy;            // Lower diagonal bandwidth
+    bwu = bwl;                // Upper diagonal bandwidth
+    lda = 1 + 2*bwl + bwu;    // Number of rows in compressed matrix
+    ipiv = new int[n];      // Pivot data
+    int info;
+    
+    F77NAME(dgbtrf) (m, n, bwl, bwu, AHat, lda, ipiv, info);
+    if (info) {
+        cout << "Error occurred in DGBTRF: " << info << endl;
+    }
 }
 
 void Poisson2DSolver::SolveSerial() {
-    const int m = bHatNy*bHatNx;      // Number of rows of matrix A
-    const int n = bHatNy*bHatNx;      // Number of columns of matrix A
-    const int kl = bHatNy;            // Lower diagonal bandwidth
-    const int ku = kl;                // Upper diagonal bandwidth
-    const int lda = 1 + 2*kl + ku;    // Number of rows in compressed matrix
-    int* piv = new int[n];      // Pivot data
     int info;
-    
     int nrhs = 1;
     
     cblas_dcopy(bHatNy*bHatNx, bHat, 1, xHat, 1);
-    F77NAME(dgbtrf) (m, n, kl, ku, AHat, lda, piv, info);
-    F77NAME(dgbtrs) ('N', n, kl, ku, nrhs, AHat, lda, piv, xHat, n,info);
+    F77NAME(dgbtrs) ('N', n, bwl, bwu, nrhs, AHat, lda, ipiv, xHat, n, info);
+    if (info) {
+        cout << "Error occurred in DGBTRS: " << info << endl;
+    }
 }
