@@ -2,13 +2,13 @@ clc;
 clear; 
 
 Lx = 1;
-Ly = 1;
-Nx = 51;
-Ny = 51;
+Ly = 2;
+Nx = 5;
+Ny = 5;
 dt = 0.0001;
-dt = 0.01;
+% dt = 0.01;
 T = 1.0;
-Re = 500;
+Re = 100;
 
 U = 1.0;
 
@@ -26,11 +26,11 @@ interiorNx = Nx-2;
 w = zeros(Ny,Nx);
 s = zeros(Ny,Nx);
 
-s = [7     72    40    3     3   ;  
-49    44    65    27    69    ;
-73    78    92    29    9     ;
-58    23    42    40    57    ;
-30    9     87    12    60 ;];
+% s = [7     72    40    3     3   ;  
+% 49    44    65    27    69    ;
+% 73    78    92    29    9     ;
+% 58    23    42    40    57    ;
+% 30    9     87    12    60 ;];
 
 alpha = 1/dx/dx;
 beta = 1/dy/dy;
@@ -51,6 +51,16 @@ end
 
 totalT = 0;
 while totalT < T
+    disp(w)
+    
+    % ##################### calculating interior vorticity at t ##################### 
+    % iteratively
+    for i = 2:Nx-1
+        for j = 2:Ny-1
+            w(j,i) = -(s(j,i+1)-2*s(j,i)+s(j,i-1))/dx/dx -(s(j+1,i)-2*s(j,i)+s(j-1,i))/dy/dy;
+        end
+    end
+    
     % ##################### Applying BC ##################### 
     % iteratively
     w(Ny,:) = (s(Ny,:) - s(Ny-1,:))*2/dy/dy-2*U/dy; % Top
@@ -61,14 +71,6 @@ while totalT < T
     w(Ny,1) = 0;
     w(Ny,Nx) = 0;
     w(1,Ny) = 0;
-    
-    % ##################### calculating interior vorticity at t ##################### 
-    % iteratively
-    for i = 2:Nx-1
-        for j = 2:Ny-1
-            w(j,i) = -(s(j,i+1)-2*s(j,i)+s(j,i-1))/dx/dx -(s(j+1,i)-2*s(j,i)+s(j-1,i))/dy/dy;
-        end
-    end
     
     % ##################### calculating interior vorticity at t+dt ##################### 
     % iteratively

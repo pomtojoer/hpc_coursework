@@ -1,12 +1,13 @@
 clc;
 clear; 
 
-Lx = 1;
-Ly = 2;
-Nx = 81;
-Ny = 161;
+Lx = 2;
+Ly = 1;
+Nx = 11;
+Ny = 11;
 dt = 0.0001;
-T = 2.0;
+dt = 0.01;
+T = 1.0;
 Re = 100;
 
 U = 1.0;
@@ -39,10 +40,10 @@ LapacianMatrix = zeros((interiorNx)*(interiorNy),(interiorNx)*(interiorNy));
 for j = 1:(interiorNy)*(interiorNx)
     for i = 1:(interiorNy)*(interiorNx)
         if i==j
-            LapacianMatrix(i,j) = gamma;
-        elseif (i==j-(interiorNy)) || (i-(interiorNx)==j)
+            LapacianMatrix(j,i) = gamma;
+        elseif (j==i+interiorNy) || (i==j+interiorNy)
             LapacianMatrix(i,j) = -alpha;
-        elseif (((i==j-1) && (mod(i,interiorNy)~=0)) || ((i-1==j) && (mod(j,interiorNx)~=0)))
+        elseif (((i==j-1) && (mod(i,interiorNy)~=0)) || ((i-1==j) && (mod(j,interiorNy)~=0)))
             LapacianMatrix(i,j) = -beta;
         end
     end
@@ -88,7 +89,7 @@ while totalT < T
     % iteratively
     interiorOmegaV = w(2:Ny-1,2:Nx-1);
     t = linsolve(LapacianMatrix,interiorOmegaV(:));
-    s(2:Ny-1,2:Nx-1) = reshape(t,[interiorNy,interiorNy]);
+    s(2:Ny-1,2:Nx-1) = reshape(t,[interiorNy,interiorNx]);
     
     
     % ##################### plotting ##################### 
