@@ -147,6 +147,8 @@ for i=1:length(filenames2)
     
     xgrid = linspace(0,Lx,Nx);
     ygrid = linspace(0,Ly,Ny);
+    
+    [xcoord,ycoord] = meshgrid(xgrid,ygrid);
 
     figure(5+i)
     contourf(xcoord,ycoord,s);
