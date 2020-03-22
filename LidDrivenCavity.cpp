@@ -12,9 +12,9 @@ void PrintMatrix(double* mat, int rows, int cols, bool isRowMajor) {
     for (int i=0; i<rows; i++) {
         for (int j=0; j<cols; j++) {
             if (isRowMajor == false) {
-                cout << setw(10) << left << mat[i+j*rows];
+                cout << setprecision(5) << setw(10) << left << mat[i+j*rows];
             } else {
-                cout << setw(10) << left << mat[i*cols+j];
+                cout << setprecision(5) << setw(10) << left << mat[i*cols+j];
             }
         }
         cout << endl;
@@ -219,6 +219,7 @@ void LidDrivenCavity::SetVorticityBoundaryConditions()
             w[i+Ny*(Nx-1)] = (s[i+Ny*(Nx-1)]-s[i+Ny*(Nx-2)]) * 2/dx/dx;
         }
     }
+    cout << w[12] << endl;
 }
 
 void LidDrivenCavity::SetInteriorVorticity()
@@ -230,7 +231,7 @@ void LidDrivenCavity::SetInteriorVorticity()
             int i = iInnerCoords[k];
             int j = jInnerCoords[k];
             
-            tempW[i*Nx+j] = -(s[i*Nx+(j+1)]-2*s[i*Nx+(j)]+s[i*Nx+(j-1)]) /dx/dx - (s[(i+1)*Nx+j]-2*s[i*Nx+j]+s[(i-1)*Nx+j]) /dy/dy;
+            tempW[i*Nx+j] = -(s[i*Nx+(j+1)]-2*s[i*Nx+(j)]+s[i*Nx+(j-1)]) /dy/dy - (s[(i+1)*Nx+j]-2*s[i*Nx+j]+s[(i-1)*Nx+j]) /dx/dx;
         }
         
         if (MPIRank>0) {
@@ -248,7 +249,7 @@ void LidDrivenCavity::SetInteriorVorticity()
     } else {
         for (unsigned int i=1; i<(Nx-1); i++) {
             for (unsigned int j=1; j<(Ny-1); j++) {
-                w[i*Ny+j] = -(s[i*Ny+(j+1)]-2*s[i*Ny+(j)]+s[i*Ny+(j-1)]) /dx/dx - (s[(i+1)*Ny+j]-2*s[i*Ny+j]+s[(i-1)*Ny+j]) /dy/dy;
+                w[i*Ny+j] = -(s[i*Ny+(j+1)]-2*s[i*Ny+(j)]+s[i*Ny+(j-1)]) /dy/dy - (s[(i+1)*Ny+j]-2*s[i*Ny+j]+s[(i-1)*Ny+j]) /dx/dx;
             }
         }
     }
@@ -267,8 +268,8 @@ void LidDrivenCavity::UpdateInteriorVorticity()
             int j = jInnerCoords[k];
             double term1 = (s[(i+1)*Ny+j]-s[(i-1)*Ny+j])*(w[i*Ny+(j+1)]-w[i*Ny+(j-1)]);
             double term2 = (s[i*Ny+(j+1)]-s[i*Ny+(j-1)])*(w[(i+1)*Ny+j]-w[(i-1)*Ny+j]);
-            double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dx/dx;
-            double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dy/dy;
+            double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dy/dy;
+            double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dx/dx;
             
             temp[i*Nx+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
         }
@@ -289,8 +290,8 @@ void LidDrivenCavity::UpdateInteriorVorticity()
             for (unsigned int j=1; j<(Ny-1); j++) {
                 double term1 = (s[(i+1)*Ny+j]-s[(i-1)*Ny+j])*(w[i*Ny+(j+1)]-w[i*Ny+(j-1)]);
                 double term2 = (s[i*Ny+(j+1)]-s[i*Ny+(j-1)])*(w[(i+1)*Ny+j]-w[(i-1)*Ny+j]);
-                double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dx/dx;
-                double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dy/dy;
+                double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dy/dy;
+                double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dx/dx;
                 
                 temp[i*Nx+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
             }
@@ -338,40 +339,40 @@ void LidDrivenCavity::Integrate()
             cout << tnow << "######################################################################x"<< endl;
         }
         
-//        if (MPIRank==0) {
-//            cout << "At initial" << endl;
-//            cout << "omega" << endl;
-//            PrintMatrix(w,Ny,Nx,false);
-//            cout << "psi" << endl;
-//            PrintMatrix(s,Ny,Nx,false);
-//        }
+        if (MPIRank==0) {
+            cout << "At initial" << endl;
+            cout << "omega" << endl;
+            PrintMatrix(w,Ny,Nx,false);
+            cout << "psi" << endl;
+            PrintMatrix(s,Ny,Nx,false);
+        }
 
         SetInteriorVorticity();
-//        if (MPIRank==0) {
-//            cout << "After setting vorticity at t" << endl;
-//            cout << "omega" << endl;
-//            PrintMatrix(w,Ny,Nx,false);
-//            cout << "psi" << endl;
-//            PrintMatrix(s,Ny,Nx,false);
-//        }
+        if (MPIRank==0) {
+            cout << "After setting vorticity at t" << endl;
+            cout << "omega" << endl;
+            PrintMatrix(w,Ny,Nx,false);
+            cout << "psi" << endl;
+            PrintMatrix(s,Ny,Nx,false);
+        }
 
         SetVorticityBoundaryConditions();
-//        if (MPIRank==0) {
-//            cout << "After setting BC" << endl;
-//            cout << "omega" << endl;
-//            PrintMatrix(w,Ny,Nx,false);
-//            cout << "psi" << endl;
-//            PrintMatrix(s,Ny,Nx,false);
-//        }
+        if (MPIRank==0) {
+            cout << "After setting BC" << endl;
+            cout << "omega" << endl;
+            PrintMatrix(w,Ny,Nx,false);
+            cout << "psi" << endl;
+            PrintMatrix(s,Ny,Nx,false);
+        }
         
         UpdateInteriorVorticity();
-//        if (MPIRank==0) {
-//            cout << "After setting vorticity at t+dt" << endl;
-//            cout << "omega" << endl;
-//            PrintMatrix(w,Ny,Nx,false);
-//            cout << "psi" << endl;
-//            PrintMatrix(s,Ny,Nx,false);
-//        }
+        if (MPIRank==0) {
+            cout << "After setting vorticity at t+dt" << endl;
+            cout << "omega" << endl;
+            PrintMatrix(w,Ny,Nx,false);
+            cout << "psi" << endl;
+            PrintMatrix(s,Ny,Nx,false);
+        }
 
         if (MPISize > 1) {
             MPI_Bcast(w, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -390,13 +391,13 @@ void LidDrivenCavity::Integrate()
             MPI_Bcast(s, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         }
         
-//        if (MPIRank==0) {
-//            cout << "After solve" << endl;
-//            cout << "omega" << endl;
-//            PrintMatrix(w,Ny,Nx,false);
-//            cout << "psi" << endl;
-//            PrintMatrix(s,Ny,Nx,false);
-//        }
+        if (MPIRank==0) {
+            cout << "After solve" << endl;
+            cout << "omega" << endl;
+            PrintMatrix(w,Ny,Nx,false);
+            cout << "psi" << endl;
+            PrintMatrix(s,Ny,Nx,false);
+        }
         
         tnow += dt;
     } while (tnow < T);
