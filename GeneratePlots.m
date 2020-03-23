@@ -5,13 +5,13 @@ set(groot, 'defaultAxesTickLabelInterpreter','latex');
 set(groot, 'defaultLegendInterpreter','latex');
 set(groot, 'DefaultTextInterpreter','latex');
 
-test = "1_1_5_5_100_data.txt";
-re100 = "1_1_161_161_100_data.txt";
-re400 = "1_1_161_161_400_data.txt";
-re1000 = "1_1_161_161_1000_data.txt";
-re3200 = "1_1_161_161_3200_data.txt";
-lx1ly2 = "1_2_161_161_100_data.txt";
-lx2ly1 = "2_1_161_161_100_data.txt";
+test = "Data/1_1_5_5_100_data.txt";
+re100 = "Data/1_1_161_161_100_data.txt";
+re400 = "Data/1_1_161_161_400_data.txt";
+re1000 = "Data/1_1_161_161_1000_data.txt";
+re3200 = "Data/1_1_161_161_3200_data.txt";
+lx1ly2 = "Data/1_2_161_161_100_data.txt";
+lx2ly1 = "Data/2_1_161_161_100_data.txt";
 
 filenames = [re100, "Re=100";
              re400, "Re=400";
@@ -69,11 +69,11 @@ for i=1:length(filenames)
     
     figure(1)
     hold on
-    plot(xgrid,u);
+    plot(ygrid,u);
     
     figure(2)
     hold on
-    plot(ygrid,v);
+    plot(xgrid,v);
     
     if i==1
         [xcoord,ycoord] = meshgrid(xgrid,ygrid);
@@ -97,22 +97,22 @@ for i=1:length(filenames)
 end
 
 figure(1)
-title('Plot of $u$ agaisnt $x$ for $y=0.5,\,L_x=1,\,L_y=1$ on a 161x161 grid');
+title('Plot of $u$ agaisnt $y$ for $x=0.5,\,L_x=1,\,L_y=1$ on a 161x161 grid');
 grid on
 grid minor
-xlabel("x");
-ylabel("u");
+xlabel("$y$");
+ylabel("$u$");
 legend(filenames(:,2), "Location", "southwest");
-saveas(gcf,'Images/u_vs_x.png');
+saveas(gcf,'Images/u_vs_y.png');
 
 figure(2)
-title('Plot of $v$ agaisnt $y$ for $x=0.5,\,L_x=1,\,L_y=1$ on a 161x161 grid');
+title('Plot of $v$ agaisnt $x$ for $y=0.5,\,L_x=1,\,L_y=1$ on a 161x161 grid');
 grid on
 grid minor
-xlabel("y");
-ylabel("v");
+xlabel("$x$");
+ylabel("$v$");
 legend(filenames(:,2), "Location", "northwest");
-saveas(gcf,'Images/v_vs_y.png');
+saveas(gcf,'Images/v_vs_x.png');
 
 figure(3)
 title('Contour plot for vorticity at $Re=100,\,L_x=1,\,L_y=1$ on a 161x161 grid');
@@ -128,9 +128,12 @@ ylabel("y");
 colorbar("eastoutside");
 saveas(gcf,'Images/s_100.png');
 
+figure(10)
+saveas(gcf,'Images/collated.png');
 
-lx1ly2 = "1_2_161_161_100_data.txt";
-lx2ly1 = "2_1_161_161_100_data.txt";
+
+lx1ly2 = "Data/1_2_161_161_100_data.txt";
+lx2ly1 = "Data/2_1_161_161_100_data.txt";
 
 filenames2 = [lx1ly2, lx2ly1];
 

@@ -2,9 +2,9 @@ clc;
 clear; 
 
 Lx = 1;
-Ly = 2;
-Nx = 5;
-Ny = 7;
+Ly = 1;
+Nx = 11;
+Ny = 5;
 dt = 0.0001;
 % dt = 0.01;
 T = 1.0;
@@ -49,9 +49,10 @@ for j = 1:(interiorNy)*(interiorNx)
     end
 end
 
+iterations = 0;
 totalT = 0;
 while totalT < T
-    disp(w)
+%     disp(w)
     
     % ##################### calculating interior vorticity at t ##################### 
     % iteratively
@@ -94,14 +95,19 @@ while totalT < T
     s(2:Ny-1,2:Nx-1) = reshape(t,[interiorNy,interiorNx]);
     
     
-    % ##################### plotting ##################### 
-    subplot(221), contour(((w))), axis('square');            % Vorticity
-    subplot(222), contour(((s))), axis('square');          % Stream function
-    pause(0.0001)
-    
+%     % ##################### plotting ##################### 
+%     subplot(221), contour(((w))), axis('square');            % Vorticity
+%     subplot(222), contour(((s))), axis('square');          % Stream function
+%     pause(0.0001)
+%     
     totalT = totalT + dt;
+    iterations = iterations + 1;
 end
 
+w
+s
+subplot(221), contour(((w))), axis('square');	% Vorticity
+subplot(222), contour(((s))), axis('square');	% Streamfunction
 
 % omegaMat(2:Ny-1,2:Nx-1) = temp;
 
