@@ -336,7 +336,8 @@ void LidDrivenCavity::Integrate()
     double tnow = 0.0;
     do {
         if (MPIRank==0) {
-            cout << tnow << "######################################################################x"<< endl;
+            string strout = "\r" + to_string((int)ceil((tnow/T*100))) + "% completed";
+            cout << strout;
         }
         
 //        if (MPIRank==0) {

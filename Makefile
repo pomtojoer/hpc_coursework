@@ -14,26 +14,23 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
 
-.PHONY: clean run
+.PHONY: test testSerial clean cleanImages cleanData cleanAll
 
 # An example of using the code
-run: $(TARGET)
-	./$(TARGET)
-
 test:$(TARGET)
 	mpiexec -np 4 ./$(TARGET) --Nx=5 --Ny=5 --Px=2 --Py=2
 
-test1:$(TARGET)
+testSerial:$(TARGET)
 	mpiexec -np 1 ./$(TARGET) --Nx=5 --Ny=5
 
-testAll: $(TARGET)
-	./$(TARGET)
-	./$(TARGET) --Lx=1.0 --Ly=1.0 --Nx=161 --Ny=161 --Px=0 --Py=0 --dt=0.0001 --T=1.0 --Re=100
-	./$(TARGET) --Lx=1.0 --Ly=1.0 --Nx=161 --Ny=161 --Px=0 --Py=0 --dt=0.0001 --T=1.0 --Re=400
-	./$(TARGET) --Lx=1.0 --Ly=1.0 --Nx=161 --Ny=161 --Px=0 --Py=0 --dt=0.0001 --T=1.0 --Re=1000
-	./$(TARGET) --Lx=1.0 --Ly=1.0 --Nx=161 --Ny=161 --Px=0 --Py=0 --dt=0.0001 --T=1.0 --Re=3200
-	./$(TARGET) --Lx=1.0 --Ly=2.0 --Nx=161 --Ny=161 --Px=0 --Py=0 --dt=0.0001 --T=1.0 --Re=100
-	./$(TARGET) --Lx=2.0 --Ly=1.0 --Nx=161 --Ny=161 --Px=0 --Py=0 --dt=0.0001 --T=1.0 --Re=100
-	
 clean:
 	rm -f $(TARGET) *.o
+
+cleanImages:
+	rm -f Images/*
+
+cleanData:
+	rm -f Data/*
+
+cleanAll:
+	rm -f Data/* Images/* *.o $(TARGET)

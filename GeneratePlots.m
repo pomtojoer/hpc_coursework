@@ -92,8 +92,8 @@ for i=1:length(filenames)
     wplot = str2num("24" + (i*2-1));
     figure(10)
     hold on
-    subplot(splot), contour(((s))), axis('square'), title("streamfunction @"+plotlabel);
-    subplot(wplot), contour(((w))), axis('square'), title("vorticity @"+plotlabel);    
+    subplot(splot), contourf(s), axis('square'), title("streamfunction @"+plotlabel);
+    subplot(wplot), contourf(w,100), axis('square'), title("vorticity @"+plotlabel);    
 end
 
 figure(1)

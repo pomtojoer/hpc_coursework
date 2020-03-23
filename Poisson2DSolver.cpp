@@ -1,3 +1,12 @@
+/**
+    High Performane Computing Coursework
+    Poisson2DSolver.cpp
+    Purpose: Implements a serial and parallel solver for a 2D Poisson Equation (Dirichlet Problem) using Lapack and Scalapack.
+
+    @author Sean Chai
+    @version 1.0 23/03/20
+*/
+
 #include "Poisson2DSolver.h"
 #include "cblas.h"
 #include "mpi.h"
@@ -5,43 +14,55 @@
 #include <iomanip>
 #include <cmath>
 
+// Defining the fortran routines to be used in c++
 #define F77NAME(x) x##_
 extern "C" {
     // For serial solve
+    // Performs LU factorisation of a general banded matrix in serial
     void F77NAME(dgbtrf) (const int& m, const int& n, const int& kl,
                           const int& ku, double* A, const int& lda,
                           int* ipiv, int& info);
-
+    
+    // Solved prefactored-system of equations in serial
     void F77NAME(dgbtrs) (const char& trans, const int& n, const int& kl,
                           const int &ku, const int& nrhs, const double* A,
                           const int& lda, const int* ipiv, double* b,
                           const int& ldb, int& info);
     
     // For parallel solve
+    // Performs LU factorisation of a general banded matrix in parallel
     void F77NAME(pdgbtrf)(const int& n, const int& bwl, const int& bwu,
                           double* A, const int& ja, int* desca,
                           int* ipiv, double* af, int& laf,
                           double* work, int& lwork, int& info);
-
+    
+    // Solved prefactored-system of equations in serial
     void F77NAME(pdgbtrs)(const char& trans, const int& n, const int& bwl,
                           const int& bwu, const int& nrhs, double* A,
                           const int& ja, int* desca, int* ipiv,
                           double* b, const int& ib, int* descb, double* af, int& laf,
                           double* work, int& lwork, int& info);
     
-    // For sending and receiving matrix
+    // For communication between processes
+    // Sends a matrix from current process to destination process
     void F77NAME(dgesd2d)(const int& icontxt, const int& m, const int& n,
                           double* A, const int& lda, const int& rdest,
                           int& cdest);
-
+    
+    // Receives a matrix from the source process into the current process
     void F77NAME(dgerv2d)(const int& icontxt, const int& m, const int& n,
                           double* A, const int& lda, const int& rsrc,
                           int& csrc);
 
 
-    // BLACS declaration
+    // Declation of BLACS functions
+    // Function to return the number of available processes for use
     void Cblacs_pinfo(int*, int*);
+
+    // Function to get values that BLACS use for internal defaults
     void Cblacs_get(int, int, int*);
+    
+    // Function to
     void Cblacs_gridinit(int*, const char*, int, int);
     void Cblacs_gridinfo(int, int*, int*, int*, int*);
     void Cblacs_gridexit(int);
