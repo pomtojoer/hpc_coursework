@@ -186,7 +186,6 @@ void Poisson2DSolver::GenerateScalapackMatrixAHat()
         if (i>bHatNy-1) {
             AHat[i*aHatNy + 2*bHatNy] = -1*alpha;
         }
-        
     }
 }
 
@@ -231,7 +230,6 @@ void Poisson2DSolver::GenerateLapackMatrixAHat()
             AHat[i*aHatNy + bHatNy] = -1*alpha;
         }
     }
-    PrintMatrix2(AHat,aHatNy,aHatNx,false);
 }
 
 double* Poisson2DSolver::GetScalapackMatrixAHat() {

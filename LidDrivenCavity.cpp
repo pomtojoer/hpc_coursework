@@ -54,7 +54,7 @@ void LidDrivenCavity::SetMPIConfig()
     int MPIInitialised;
     MPI_Initialized(&MPIInitialised);
     if (!MPIInitialised){
-        cout << "Error: MPI was not initialisde." << endl;
+        cout << "Error: MPI was not initialised." << endl;
         throw std::exception();
     } else {
         // Get the rank and comm size on each process.
@@ -76,7 +76,7 @@ void LidDrivenCavity::SetMPIConfig()
                 int* iCoord = new int[interiorNarr];
                 int* jCoord = new int[interiorNarr];
                 for (unsigned int i=0; i<interiorNx; i++) {
-                    for (unsigned int j=0; j<interiorNx; j++) {
+                    for (unsigned int j=0; j<interiorNy; j++) {
                         iCoord[i*interiorNy+j] = i+1;
                         jCoord[i*interiorNy+j] = j+1;
                     }
@@ -225,14 +225,14 @@ void LidDrivenCavity::SetInteriorVorticity()
 {
     if (MPISize > 1) {
         double* tempW = new double[narr]{};
-//        cout << "Rank " << MPIRank << " Start: " << startingPosition << " End: " << endingPosition << endl;
+        
         for (int k=0; k<coordArrLen; k++) {
             int i = iInnerCoords[k];
             int j = jInnerCoords[k];
             
-            tempW[i*Nx+j] = -(s[i*Nx+(j+1)]-2*s[i*Nx+(j)]+s[i*Nx+(j-1)]) /dy/dy - (s[(i+1)*Nx+j]-2*s[i*Nx+j]+s[(i-1)*Nx+j]) /dx/dx;
+            tempW[i*Ny+j] = -(s[i*Ny+(j+1)]-2*s[i*Ny+(j)]+s[i*Ny+(j-1)]) /dy/dy - (s[(i+1)*Ny+j]-2*s[i*Ny+j]+s[(i-1)*Ny+j]) /dx/dx;
         }
-        
+
         if (MPIRank>0) {
             MPI_Send(tempW, narr, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         } else {
@@ -270,7 +270,7 @@ void LidDrivenCavity::UpdateInteriorVorticity()
             double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dy/dy;
             double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dx/dx;
             
-            temp[i*Nx+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
+            temp[i*Ny+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
         }
         
         if (MPIRank>0) {
@@ -292,7 +292,7 @@ void LidDrivenCavity::UpdateInteriorVorticity()
                 double term3 = (w[i*Ny+(j+1)]-2*w[i*Ny+(j)]+w[i*Ny+(j-1)]) /dy/dy;
                 double term4 = (w[(i+1)*Ny+j]-2*w[i*Ny+j]+w[(i-1)*Ny+j]) /dx/dx;
                 
-                temp[i*Nx+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
+                temp[i*Ny+j] = dt/4/dx/dy * (term1 - term2) + dt/Re * (term3 + term4);
             }
         }
     }
@@ -325,6 +325,7 @@ void LidDrivenCavity::Integrate()
         if (MPIRank > 0) {
             poissonSolver->SetScalapackMatrixAHat(scalapackMatrix, scalapackMatrixNx, scalapackMatrixNy);
         }
+        
         poissonSolver->InitialiseScalapack(Px,Py);
         poissonSolver->PrefactorMatrixAHatParallel();
     } else {
