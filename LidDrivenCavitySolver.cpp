@@ -20,8 +20,8 @@ int main(int argc, char **argv)
         ("Ny", po::value<unsigned int>()->default_value(161), "Set number of grid points in the y-direction. Default = 161")
         ("Px", po::value<unsigned int>()->default_value(1), "Set number of partitions in the x-direction. Default = 1")
         ("Py", po::value<unsigned int>()->default_value(1), "Set number of partitions in the y-direction. Default = 1")
-        ("dt", po::value<double>()->default_value(0.0001), "Set timestep. Default = 1.0")
-        ("T", po::value<double>()->default_value(1), "Set final time. Default = 1E-5")
+        ("dt", po::value<double>()->default_value(0.0001), "Set timestep. Default = 1E-5")
+        ("T", po::value<double>()->default_value(1), "Set final time. Default = 1.0")
         ("Re", po::value<double>()->default_value(100), "Set Reynolds number. Default = 100");
     
     // Telling boost to parse command-line arguments using list of possible options

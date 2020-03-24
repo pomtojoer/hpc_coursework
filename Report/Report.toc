@@ -1,6 +1,0 @@
-\contentsline {section}{\numberline {1}Result of running Lid Driven Cavity Solver}{2}% 
-\contentsline {subsection}{\numberline {1.1}Velocity Plots}{2}% 
-\contentsline {subsection}{\numberline {1.2}Vorticity and Streamfunction}{2}% 
-\contentsline {subsection}{\numberline {1.3}Minimum Streamfunction}{3}% 
-\contentsline {subsection}{\numberline {1.4}Streamfunction Plots for Varying $L_x$ and $L_y$}{3}% 
-\contentsline {section}{\numberline {2}Discussion of Parallel Code}{3}% 

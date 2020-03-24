@@ -63,8 +63,8 @@
     	\toprule
     	Reynolds Number & 100 & 400 & 1000 & 3200 \\
     	\midrule
-		x-coordinate &  &  &  &  \\
-		y-coordinate &  &  &  &  \\
+		x-coordinate & 0.6562 & 0.8250 & 0.6875 & 0.6500 \\
+		y-coordinate & 0.8250 & 0.8812 & 0.6875 & 0.6188  \\
         \bottomrule
         \end{tabular}
         \vspace{0.5em}
@@ -95,4 +95,6 @@
 	One method of optimising the code was to do the update of vorticity at time $t$ and $t+dt$ in a manner that is consistent with the storage of the data. In our case, that meant updating the values in a column-major format as the matrices were stored as such. This allowed for faster memory access due to the reduced need of traversing through the array to reach the memory address. Additionally, I allocated the same chunk of the array to the same processes for the parallel portion of the code. This allowed each processor to access the same part of the array each time, thereby utilising memory caching which allowed for faster memory access.
 	
 	Another method of optimising the serial code was to separate it from the parallel one. This reduced the need to
+	
+	\section{223456}
 \end{document}
