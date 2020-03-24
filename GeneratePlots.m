@@ -116,7 +116,7 @@ grid minor
 xlabel("$y$");
 ylabel("$u$");
 legend(filenames(:,2), "Location", "southwest");
-% saveas(gcf,'Images/u_vs_y.png');
+saveas(gcf,'Images/u_vs_y.png');
 
 figure(2)
 title('Plot of $v$ agaisnt $x$ for $y=0.5,\,L_x=1,\,L_y=1$ on a 161x161 grid');
@@ -125,24 +125,24 @@ grid minor
 xlabel("$x$");
 ylabel("$v$");
 legend(filenames(:,2), "Location", "northwest");
-% saveas(gcf,'Images/v_vs_x.png');
+saveas(gcf,'Images/v_vs_x.png');
 
 figure(3)
 title('Contour plot for vorticity at $Re=100,\,L_x=1,\,L_y=1$ on a 161x161 grid');
 xlabel("x");
 ylabel("y");
 colorbar("eastoutside");
-% saveas(gcf,'Images/w_100.png');
+saveas(gcf,'Images/w_100.png');
 
 figure(4)
 title('Contour plot for streamfunction at $Re=100,\,L_x=1,\,L_y=1$ on a 161x161 grid');
 xlabel("x");
 ylabel("y");
 colorbar("eastoutside");
-% saveas(gcf,'Images/s_100.png');
+saveas(gcf,'Images/s_100.png');
 
 figure(10)
-% saveas(gcf,'Images/collated.png');
+saveas(gcf,'Images/collated.png');
 
 %% Plotting the plots with different Lx and Ly
 filenames2 = [lx1ly2, lx2ly1];

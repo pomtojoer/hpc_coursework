@@ -568,6 +568,9 @@ void LidDrivenCavity::GeneratePlotData()
                 outputfile << endl;
             }
         }
+        
+        cout << endl << endl;
+        
     }
 }
 
