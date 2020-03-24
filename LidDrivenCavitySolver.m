@@ -1,15 +1,16 @@
 clc;
 clear; 
 
-Lx = 1;
-Ly = 1;
-Nx = 11;
-Ny = 5;
-dt = 0.0001;
-% dt = 0.01;
-T = 1.0;
-Re = 100;
+%% Variables to be defined 
+Lx = 1;         % domain length in the x direction
+Ly = 1;         % domain length in the y direction
+Nx = 11;        % grid size in the x direction
+Ny = 5;         % grid size in the y direction
+dt = 0.0005;    % time strp
+T = 1.0;        % final time
+Re = 100;       % Reynolds number
 
+%% Checking the stability criterion
 U = 1.0;
 
 dx = Lx/(Nx-1);
@@ -20,18 +21,14 @@ if Re*dx*dy/4 <= dt
     return
 end
 
+%% Initialising the streamfunction and vorticity matrices
 interiorNy = Ny-2;
 interiorNx = Nx-2;
 
 w = zeros(Ny,Nx);
 s = zeros(Ny,Nx);
 
-% s = [7     72    40    3     3   ;  
-% 49    44    65    27    69    ;
-% 73    78    92    29    9     ;
-% 58    23    42    40    57    ;
-% 30    9     87    12    60 ;];
-
+%% Generating the Laplacian matrix for solve
 alpha = 1/dx/dx;
 beta = 1/dy/dy;
 gamma = 2*(alpha+beta);
@@ -49,11 +46,10 @@ for j = 1:(interiorNy)*(interiorNx)
     end
 end
 
+%% Solving the lid driven cavity problem
 iterations = 0;
 totalT = 0;
 while totalT < T
-%     disp(w)
-    
     % ##################### calculating interior vorticity at t ##################### 
     % iteratively
     for i = 2:Nx-1
@@ -95,20 +91,21 @@ while totalT < T
     s(2:Ny-1,2:Nx-1) = reshape(t,[interiorNy,interiorNx]);
     
     
-%     % ##################### plotting ##################### 
-%     subplot(221), contour(((w))), axis('square');            % Vorticity
-%     subplot(222), contour(((s))), axis('square');          % Stream function
-%     pause(0.0001)
-%     
+    % ##################### animated plotting ##################### 
+    figure(1)
+    subplot(221), contour(((w))), axis('square');   % Vorticity
+    subplot(222), contour(((s))), axis('square');	% Stream function
+    pause(0.0001)
+    
     totalT = totalT + dt;
     iterations = iterations + 1;
 end
 
-w
-s
+%% Displaying and plotting the final values
+disp("The vorticity matrix looks like: ")
+disp(w)
+disp("The streamfunction matrix looks like: ")
+disp(s)
+figure(2)
 subplot(221), contour(((w))), axis('square');	% Vorticity
 subplot(222), contour(((s))), axis('square');	% Streamfunction
-
-% omegaMat(2:Ny-1,2:Nx-1) = temp;
-
-% solving stream function

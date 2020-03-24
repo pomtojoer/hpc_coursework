@@ -31,16 +31,13 @@
 		
 	\end{titlepage}
 	
-	\tableofcontents
-	\newpage
-	
 	\section{Result of running Lid Driven Cavity Solver}
 	\subsection{Velocity Plots}
 	\begin{figure}[htp]
             \centering
-            \subfloat[Horizontal velocity $u$ against $x$ along $y=0.5$]{\includegraphics[width=0.48\textwidth]{../Images/u_vs_x.png}}
+            \subfloat[Horizontal velocity $u$ against $y$ along $x=0.5$]{\includegraphics[width=0.48\textwidth]{../Images/u_vs_y.png}}
             \hfill
-            \subfloat[Vertical velocity $v$ against $y$ along $x=0.5$]{\includegraphics[width=0.48\textwidth]{../Images/v_vs_y.png}}
+            \subfloat[Vertical velocity $v$ against $x$ along $y=0.5$]{\includegraphics[width=0.48\textwidth]{../Images/v_vs_x.png}}
             \caption{Plot of velocities of the steady state solution for Reynolds numbers of 100, 400, 1000 and 3200 using a $161 \times 161$ grid and $L_x = L_y = 1$.}
             \label{fig:velocities}
         \end{figure}
@@ -54,8 +51,8 @@
             \caption{Contour plots of vorticity and streamfunction at $Re=100$ on a $161 \times 161$ grid and $L_x = L_y = 1$.}
             \label{fig:contours}
         \end{figure}			
-	
 	\newpage
+	
 	\subsection{Minimum Streamfunction}
 	\begin{table}[htb]
     	\centering
@@ -71,30 +68,58 @@
         \label{tab:stress}
     	\caption{Table of x-y coordinates of the streamfunction minimum at the different Reynolds numbers for a $161 \times 161$ grid and $L_x = L_y = 1$.}	
 	\end{table}
+
 	
 	\subsection{Streamfunction Plots for Varying $L_x$ and $L_y$}
-	\begin{figure}[htb]
-		\centering
-		\includegraphics[width=\linewidth]{../Images/lx1ly2.png}
-		\captionof{figure}{Contour plot of streamfunction at $Re=100$ on a $161 \times 161$ grid and $L_x = 1, \, L_y = 2$.}
-  		\label{fig:s_100}
-	\end{figure}
+	\begin{figure}[htp]
+            \centering
+            \subfloat[$L_x=1$, $L_y=2$]{\includegraphics[width=0.45\textwidth]{../Images/lx1ly2.png}}
+            \hfill
+            \subfloat[$L_x=2$, $L_y=1$]{\includegraphics[width=0.55\textwidth]{../Images/lx2ly1.png}}
+            \caption{Contour plots of  streamfunction at $Re=100$ on a $161 \times 161$ grid.}
+            \label{fig:contours}
+        \end{figure}	
 	
-	\begin{figure}[htb]
-		\centering
-		\includegraphics[width=\linewidth]{../Images/lx2ly1.png}
-		\captionof{figure}{Contour plot of streamfunction at $Re=100$ on a $161 \times 161$ grid and $L_x = 2, \, L_y = 1$.}
-  		\label{fig:lx2ly1}
-	\end{figure}
 	
+%	\begin{figure}[htb]
+%		\centering
+%		\includegraphics[width=0.45\linewidth]{../Images/lx1ly2.png}
+%		\captionof{figure}{Contour plot of streamfunction at $Re=100$ on a $161 \times 161$ grid and $L_x = 1, \, L_y = 2$.}
+%		\label{fig:s_100}
+%	\end{figure}
+%	
+%	\begin{figure}[htb]
+%		\centering
+%		\includegraphics[width=0.60\linewidth]{../Images/lx2ly1.png}
+%		\captionof{figure}{Contour plot of streamfunction at $Re=100$ on a $161 \times 161$ grid and $L_x = 2, \, L_y = 1$.}
+%		\label{fig:lx2ly1}
+%	\end{figure}
+		
 	\section{Discussion of Parallel Code}
-	One key decision in implementing the code was to swap around the steps of the algorithm. Since the calculation of the inner vorticity and the boundary vorticity are independent of one another, we can swap the steps around. By calculating the interior vorticity before the boundary, it allowed for easier parallelising of code as the coded needed to be less careful in
+	For the code, there are 4 main steps as outlined in the brief. For the first step, the calculation of the vorticity boundary conditions, it was chosen not to parallelise this segment of the code as the additional time penalty required for communication outweighed the performance gain in distributing the task among processes. This was due to the fact that the number of calculations required in this step is minimal, and only required on the bounds of the matrix.\\
 	
-	The updating of the boundary conditions was not parallelised as the time taken to send and receive the data take around the same time compared to just a simple ``for" loop. As such, the decision was made to not parallelise that portion of the code.
+	For the second step, the calculation of the interior vorticity at time $t$, the calculation was distributed among the processes present. The entire inner matrix was segmented out into chunks, whereby the size of each chunk is optimised such that the array is evenly distributed (no overloading of a single process). The index location of these chunks (i,j coordinates of the matrix) are then distributed to the individual processes to be solved. Since the size of the matrix remains constant throughout the solve, these coordinates only need to be calculated once. An example distribution of the process is visualised in Figure \ref{fig:partitioning_example} below. The same distribution was used for the third step as well.
 	
-	One method of optimising the code was to do the update of vorticity at time $t$ and $t+dt$ in a manner that is consistent with the storage of the data. In our case, that meant updating the values in a column-major format as the matrices were stored as such. This allowed for faster memory access due to the reduced need of traversing through the array to reach the memory address. Additionally, I allocated the same chunk of the array to the same processes for the parallel portion of the code. This allowed each processor to access the same part of the array each time, thereby utilising memory caching which allowed for faster memory access.
+	\begin{figure}[htb]
+		\centering
+		\includegraphics[width=\linewidth]{partition.jpg} 
+	   	\caption{Example partitioning of column-major storage matrix among 4 processes.}
+	   	\label{fig:partitioning_example}
+	\end{figure}
 	
-	Another method of optimising the serial code was to separate it from the parallel one. This reduced the need to
+	Additionally, the chunks are allocated in the same format as the storage format, in our case column major. This allowed for faster memory access due to the reduced need of traversing through the array to reach the memory address. Also, as the same chunk of the array is allocated to the process each time, memory caching allows for faster memory access.\\
 	
-	\section{223456}
+	For the fourth step, ScaLAPACK was used to solve the system of linear equations (Ax=b). The laplacian matrix, A, was stored in a banded matrix storage format so as to save space. Additionally, this A matrix was prefactored initially via LU factorisation so as to speed up subsequent solves. The solve step was then done in parallel via ScaLAPACK.\\
+	
+	One key decision in implementing the code was to swap around the steps of the algorithm. Since the calculation of the inner vorticity (step 2) and the boundary vorticity (step 1) are independent of one another, we can swap the steps around. By calculating the interior vorticity before the boundary, it allowed for easier parallelising of code. This is because the individual calculated segments can be summed together, as all values with index not within the range of the particular process is initialised as 0, then have the boundary condition applied. This compared to accessing the inner matrix and updating it individually, is a lot more convenient and efficient. 
+		
+	\begin{figure}[htb]
+		\centering
+		\includegraphics[width=\linewidth]{vorticity.jpg} 
+	   	\caption{Example of ``overlaying" matrices to get total value}
+	   	\label{fig:overlaying_example}
+	\end{figure}
+	
+		Another method of optimising the serial code was to separate it from the parallel one. This reduced the need for the serial code to send and receive.
+	
 \end{document}

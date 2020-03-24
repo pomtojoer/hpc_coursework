@@ -1,3 +1,12 @@
+/**
+    High Performane Computing Coursework
+    LidDrivenCavity.cpp
+    Purpose: Defines the class member functions for the Poisson2DSolver class. In general, it implements a serial and parallel solver for a 2D Poisson Equation (Dirichlet Problem) using Lapack and Scalapack.
+
+    @author Sean Chai
+    @version 1.0 23/03/20
+*/
+
 #include "LidDrivenCavity.h"
 #include "Poisson2DSolver.h"
 #include "cblas.h"
@@ -8,39 +17,14 @@
 #include <cmath>
 #include <string>
 
-void PrintMatrix(double* mat, int rows, int cols, bool isRowMajor) {
-    for (int i=0; i<rows; i++) {
-        for (int j=0; j<cols; j++) {
-            if (isRowMajor == false) {
-                cout << setprecision(5) << setw(10) << left << mat[i+j*rows];
-            } else {
-                cout << setprecision(5) << setw(10) << left << mat[i*cols+j];
-            }
-        }
-        cout << endl;
-    }
-    cout << endl;
-}
 
-void printVector(double* vec, int n) {
-    cout << "The vector looks like: " << endl;
-    for (int i=0; i<n; i++) {
-        cout << vec[i] << endl;
-    }
-}
-
-void printVector(int* vec, int n) {
-    cout << "The vector looks like: " << endl;
-    for (int i=0; i<n; i++) {
-        cout << vec[i] << endl;
-    }
-    cout << endl;
-}
-
+// Defines the constructor for the LidDrivenCavity class
 LidDrivenCavity::LidDrivenCavity()
 {
 }
 
+
+// Defines the destructor for the LidDrivenCavity class
 LidDrivenCavity::~LidDrivenCavity()
 {
     // Deallocating memory of class arrays
@@ -48,6 +32,13 @@ LidDrivenCavity::~LidDrivenCavity()
     delete[] s;
 }
 
+
+/**
+    Configure and initialises MPI as well as segmenting the w and s array into evenly distributed chunks for each process.
+    They are segmented in the order of their storage position.
+    
+    @return void
+*/
 void LidDrivenCavity::SetMPIConfig()
 {
     // Checking if MPI was initially initalised
@@ -102,6 +93,7 @@ void LidDrivenCavity::SetMPIConfig()
                     int startPos = startingPositions[dest];
                     int endPos = endingPositions[dest];
                     int lenArr = endPos-startPos+1;
+                    // splitting the inner coordinates of the inner matrix into respective bins
                     if (dest==0) {
                         coordArrLen = lenArr;
                         iInnerCoords = new int[coordArrLen];
@@ -109,10 +101,13 @@ void LidDrivenCavity::SetMPIConfig()
                         std::copy(iCoord+startPos, iCoord+endPos+1, iInnerCoords);
                         std::copy(jCoord+startPos, jCoord+endPos+1, jInnerCoords);
                     } else {
+                        // Creating the array containing the local chunk of coordinates
                         int* tempiCoords = new int[lenArr];
                         int* tempjCoords = new int[lenArr];
                         std::copy(iCoord+startPos, iCoord+endPos+1, tempiCoords);
                         std::copy(jCoord+startPos, jCoord+endPos+1, tempjCoords);
+                        
+                        //Sending the array containing the coordinates to the individual processes
                         MPI_Send(&lenArr, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
                         MPI_Send(tempiCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
                         MPI_Send(tempjCoords, lenArr, MPI_INT, dest, tag, MPI_COMM_WORLD);
@@ -120,6 +115,8 @@ void LidDrivenCavity::SetMPIConfig()
                         delete[] tempjCoords;
                     }
                 }
+                
+                // Deallocatin the temporary arrays
                 delete[] startingPositions;
                 delete[] endingPositions;
                 
@@ -137,53 +134,102 @@ void LidDrivenCavity::SetMPIConfig()
     }
 }
 
+
+/**
+    Function to set the length of the domain in xy directions.
+    
+    @param xlen The length of the domain in the x direction
+    @param ylen The length of the domain in the y direction
+    @return void
+*/
 void LidDrivenCavity::SetDomainSize(double xlen, double ylen)
 {
-    // Function to set the length of the domain in xy directions
     Lx = xlen;
     Ly = ylen;
 }
 
+
+/**
+    Function to set the grid size in the xy domain. The function also calculates and sets other useful variables.
+    
+    @param nx The number of grid points in the x direction
+    @param ny The number of grid points in the y direction
+    @return void
+*/
 void LidDrivenCavity::SetGridSize(unsigned int nx, unsigned int ny)
 {
-    // Function to set the grid size in the xy domain.
-    // The function also calculates and sets other useful variables.
     Nx = nx;
     Ny = ny;
     
+    // Total matrix size
     narr = Nx*Ny;
     
+    // Inner matrix dimensions
     interiorNx = Nx-2;
     interiorNy = Ny-2;
     
+    // Inner matrix size
     interiorNarr = interiorNx * interiorNy;
 }
 
+
+/**
+    Function to set the partition size in the xy domain.
+ 
+    @param nx The number of grid points in the x direction
+    @param ny The number of grid points in the y direction
+    @return void
+*/
 void LidDrivenCavity::SetPartitionSize(unsigned int px, unsigned int py)
 {
-    // Function to set the partition size in the xy domain.
     Px = px;
     Py = py;
 }
 
+
+/**
+    Function to set the time step
+ 
+    @param deltat The time step of each iteration
+    @return void
+*/
 void LidDrivenCavity::SetTimeStep(double deltat)
 {
-    // Function to set the time step
     dt = deltat;
 }
 
+
+/**
+    Function to set the final time
+ 
+    @param finalt The final time
+    @return void
+*/
 void LidDrivenCavity::SetFinalTime(double finalt)
 {
-    // Function to set the final time
     T = finalt;
 }
 
+
+/**
+    Function to set the reynolds number
+ 
+    @param re The reynolds number
+    @return void
+*/
 void LidDrivenCavity::SetReynoldsNumber(double re)
 {
-    // Function to set the reynolds number
     Re = re;
 }
 
+
+/**
+    Function to set the grid spacing
+ 
+    @param deltax The grid spacing in the x direction
+    @param deltay The grid spacing in the y direction
+    @return void
+*/
 void LidDrivenCavity::SetGridSpacing(double deltax, double deltay)
 {
     // Function to set the grid spacing
@@ -191,15 +237,28 @@ void LidDrivenCavity::SetGridSpacing(double deltax, double deltay)
     dy = deltay;
 }
 
+
+/**
+    Function to initialise the w and s arrays
+ 
+    @param
+    @return void
+*/
 void LidDrivenCavity::Initialise()
 {
     // Initialise as zeros array for initial conditions
     // t = 0, omega(x,y) = 0, psi(x,y) = 0
     w = new double[narr]{};
-    s = new double[narr]{};//{7,49,73,58,30,72,44,78,23,9,40,65,92,42,87,3,27,29,40,12,3,69,9,57,60};
+    s = new double[narr]{};
 }
 
 
+/**
+    Function to set the vorticity matrix (w) boundary conditions
+ 
+    @param
+    @return void
+*/
 void LidDrivenCavity::SetVorticityBoundaryConditions()
 {
     if(MPIRank==0) {
@@ -221,11 +280,21 @@ void LidDrivenCavity::SetVorticityBoundaryConditions()
     }
 }
 
+
+/**
+    Function to set the interior vorticity (w) at time t. Implements a second order central difference scheme for the spacial derivatives
+ 
+    @param
+    @return void
+*/
 void LidDrivenCavity::SetInteriorVorticity()
 {
     if (MPISize > 1) {
+        // Parallel version
+        // Initialising matrix to store local portion of the matrix
         double* tempW = new double[narr]{};
         
+        // Calculating the interior vorticity for the assigned segment on the given process
         for (int k=0; k<coordArrLen; k++) {
             int i = iInnerCoords[k];
             int j = jInnerCoords[k];
@@ -234,8 +303,10 @@ void LidDrivenCavity::SetInteriorVorticity()
         }
 
         if (MPIRank>0) {
+            // sending the calculated local w matrix to the root process
             MPI_Send(tempW, narr, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         } else {
+            // receiving each individual local segment and combining them on root to the global
             for (int src=1; src<MPISize; src++) {
                 double* tempWseg = new double[narr]{};
                 MPI_Recv(tempWseg, narr, MPI_DOUBLE, src, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -243,9 +314,13 @@ void LidDrivenCavity::SetInteriorVorticity()
                 delete[] tempWseg;
             }
         }
+        
+        // updating the w matrix
         delete[] w;
         w = tempW;
     } else {
+        // Serial version
+        // Calculating the interior vorticity for whole matrix w
         for (unsigned int i=1; i<(Nx-1); i++) {
             for (unsigned int j=1; j<(Ny-1); j++) {
                 w[i*Ny+j] = -(s[i*Ny+(j+1)]-2*s[i*Ny+(j)]+s[i*Ny+(j-1)]) /dy/dy - (s[(i+1)*Ny+j]-2*s[i*Ny+j]+s[(i-1)*Ny+j]) /dx/dx;
@@ -256,12 +331,25 @@ void LidDrivenCavity::SetInteriorVorticity()
     
 }
 
+
+/**
+    Function to set the interior vorticity (w) at time t+dt. Implements a second order central difference scheme for the spacial derivatives.
+ 
+    @param
+    @return void
+*/
 void LidDrivenCavity::UpdateInteriorVorticity()
 {
+    // Initialising matrix to store updated w. W is not updated immediately as the neighbouring segments
+    // rely on the t values to calculate t+dt
     double* temp = new double[narr]{};
     
     if (MPISize > 1) {
+        // Parallel version
+        // Broadcasting the original w matrix at time t to all processes
         MPI_Bcast(w, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        
+        // Calculating the updated interior vorticity for the assigned segment on the given process
         for (int k=0; k<coordArrLen; k++) {
             int i = iInnerCoords[k];
             int j = jInnerCoords[k];
@@ -274,8 +362,10 @@ void LidDrivenCavity::UpdateInteriorVorticity()
         }
         
         if (MPIRank>0) {
+            // sending the calculated local w matrix to the root process
             MPI_Send(temp, narr, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         } else {
+            // receiving each individual local segment and combining them on root to the global
             for (int src=1; src<MPISize; src++) {
                 double* tempW = new double[narr];
                 MPI_Recv(tempW, narr, MPI_DOUBLE, src, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -285,6 +375,8 @@ void LidDrivenCavity::UpdateInteriorVorticity()
         }
         
     } else {
+        // Serial version
+        // Calculating the updated interior vorticity for whole matrix w
         for (unsigned int i=1; i<(Nx-1); i++) {
             for (unsigned int j=1; j<(Ny-1); j++) {
                 double term1 = (s[(i+1)*Ny+j]-s[(i-1)*Ny+j])*(w[i*Ny+(j+1)]-w[i*Ny+(j-1)]);
@@ -297,25 +389,42 @@ void LidDrivenCavity::UpdateInteriorVorticity()
         }
     }
     
+    // updating the current w (at time t) matrix with the new w matrix (at time t+dt)
     cblas_daxpy(narr,1,temp,1,w,1);
+    
+    // deallocating temporary matrix
     delete[] temp;
 }
 
+
+/**
+    Function that integrates all the steps together to solve for the streamfunction and vorticity iteratively
+ 
+    @param
+    @return void
+*/
 void LidDrivenCavity::Integrate()
 {
+    // calculating the maindiagonal and superdiagonal values of the A matrix
     double alpha = 1 / dx / dx;
     double beta = 1 / dy / dy;
     double gamma = 2*(alpha+beta);
     
+    // Setting up the poisson solver
     Poisson2DSolver* poissonSolver = new Poisson2DSolver();
     poissonSolver->SetVariables((int)Nx,(int)Ny, alpha, beta, gamma);
+    
     if (MPISize > 1) {
+        // Parallel version
         if (MPIRank==0) {
+            // Generating the Laplacian matrix on the root process
             poissonSolver->GenerateScalapackMatrixAHat();
             scalapackMatrix = poissonSolver->GetScalapackMatrixAHat();
             scalapackMatrixNx = poissonSolver->GetScalapackMatrixAHatNx();
             scalapackMatrixNy = poissonSolver->GetScalapackMatrixAHatNy();
         }
+        // Sending the laplacian matrix to the other processes (root)
+        // Receiving and setting the laplacian matrix from the root process (other processes)
         MPI_Bcast(&scalapackMatrixNx, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&scalapackMatrixNy, 1, MPI_INT, 0, MPI_COMM_WORLD);
         if (MPIRank > 0) {
@@ -326,15 +435,22 @@ void LidDrivenCavity::Integrate()
             poissonSolver->SetScalapackMatrixAHat(scalapackMatrix, scalapackMatrixNx, scalapackMatrixNy);
         }
         
+        // Initialising BLACS for ScaLAPACK
         poissonSolver->InitialiseScalapack(Px,Py);
+        // Prefactoring the A matrix for faster solve
         poissonSolver->PrefactorMatrixAHatParallel();
     } else {
+        // Serial version
+        // Generating the Laplacian matrix
         poissonSolver->GenerateLapackMatrixAHat();
+        // Prefactoring the A matrix for faster solve
         poissonSolver->PrefactorMatrixAHatSerial();
     }
     
+    // Initialising a variable to keep track of the current time during the solve
     double tnow = 0.0;
     do {
+        // Output to the terminal the current percentage completion
         if (MPIRank==0) {
             string strout = "\r" + to_string((int)ceil((tnow/T*100))) + "% completed";
             cout << strout;
@@ -348,7 +464,7 @@ void LidDrivenCavity::Integrate()
 //            PrintMatrix(s,Ny,Nx,false);
 //        }
 
-        SetInteriorVorticity();
+        SetInteriorVorticity(); // Setting interior vorticity
 //        if (MPIRank==0) {
 //            cout << "After setting vorticity at t" << endl;
 //            cout << "omega" << endl;
@@ -357,7 +473,7 @@ void LidDrivenCavity::Integrate()
 //            PrintMatrix(s,Ny,Nx,false);
 //        }
 
-        SetVorticityBoundaryConditions();
+        SetVorticityBoundaryConditions();   // Setting vorticity boundary conditions
 //        if (MPIRank==0) {
 //            cout << "After setting BC" << endl;
 //            cout << "omega" << endl;
@@ -366,7 +482,7 @@ void LidDrivenCavity::Integrate()
 //            PrintMatrix(s,Ny,Nx,false);
 //        }
         
-        UpdateInteriorVorticity();
+        UpdateInteriorVorticity();  // Updating interior vorticity
 //        if (MPIRank==0) {
 //            cout << "After setting vorticity at t+dt" << endl;
 //            cout << "omega" << endl;
@@ -374,20 +490,29 @@ void LidDrivenCavity::Integrate()
 //            cout << "psi" << endl;
 //            PrintMatrix(s,Ny,Nx,false);
 //        }
-
+        
+        
+        // Broadcasting the assembled vorticity matrix to all other processes
         if (MPISize > 1) {
             MPI_Bcast(w, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         }
-
+        
+        // Setting the streamfunction and vorticity matrices for the poisson solver to use
         poissonSolver->SetVectors(s, w);
+        
+        // Solving based on serial or parallel
         if (MPISize > 1) {
             poissonSolver->SolveParallel();
         } else {
             poissonSolver->SolveSerial();
         }
         
-        poissonSolver->Updatex(s);
+        // Updating the current streamfunction (at time t) with the new stream function (at time t+dt)
+        if (MPIRank==0) {
+            poissonSolver->Updatex(s);
+        }
         
+        // Broadcasting the updated streamfunction to all other processes
         if (MPISize > 1) {
             MPI_Bcast(s, narr, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         }
@@ -400,14 +525,25 @@ void LidDrivenCavity::Integrate()
 //            PrintMatrix(s,Ny,Nx,false);
 //        }
         
+        // Updating the current time
         tnow += dt;
     } while (tnow < T);
 }
 
+
+/**
+    Function that outputs the streamfunction and vorticity matrices into a .txt file
+ 
+    @param
+    @return void
+*/
 void LidDrivenCavity::GeneratePlotData()
 {
     if (MPIRank==0) {
+        // Creating filename from parameters used
         string filename = "Data/" +  to_string((int)Lx) + "_" + to_string((int)Ly) + "_" + to_string(Nx) + "_" + to_string(Ny) + "_" + to_string((int)Re) + "_data.txt";
+        
+        // Opening file to write. If present before, overwrite it.
         ofstream outputfile(filename, ios::out | ios::trunc);
         if (outputfile.is_open()) {
             // Output the initial parameters
@@ -422,7 +558,6 @@ void LidDrivenCavity::GeneratePlotData()
                 }
                 outputfile << endl;
             }
-            cout << endl;
             
             // Output of the streamfunction
             outputfile << endl << "sdata" << endl;
@@ -432,7 +567,38 @@ void LidDrivenCavity::GeneratePlotData()
                 }
                 outputfile << endl;
             }
-            cout << endl;
         }
     }
 }
+
+
+// Helper functions
+//void PrintMatrix(double* mat, int rows, int cols, bool isRowMajor) {
+//    for (int i=0; i<rows; i++) {
+//        for (int j=0; j<cols; j++) {
+//            if (isRowMajor == false) {
+//                cout << setprecision(5) << setw(10) << left << mat[i+j*rows];
+//            } else {
+//                cout << setprecision(5) << setw(10) << left << mat[i*cols+j];
+//            }
+//        }
+//        cout << endl;
+//    }
+//    cout << endl;
+//}
+//
+//void printVector(double* vec, int n) {
+//    cout << "The vector looks like: " << endl;
+//    for (int i=0; i<n; i++) {
+//        cout << vec[i] << endl;
+//    }
+//}
+//
+//void printVector(int* vec, int n) {
+//    cout << "The vector looks like: " << endl;
+//    for (int i=0; i<n; i++) {
+//        cout << vec[i] << endl;
+//    }
+//    cout << endl;
+//}
+

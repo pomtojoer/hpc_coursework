@@ -1,3 +1,12 @@
+/**
+    High Performane Computing Coursework
+    LidDrivenCavitySolver.cpp
+    Purpose: Accepts options for the solver and then sets up the solver for the lid-driven cavity problem.
+
+    @author Sean Chai
+    @version 1.0 23/03/20
+*/
+
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
@@ -10,7 +19,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    // Setting up the command line inputs
+    // Setting up the command line options and defaults
     po::options_description opts("Solves the lid-driven cavity problem using the given algorithm.");
 	opts.add_options()
 	    ("help", "Prints help messege.")
@@ -49,6 +58,7 @@ int main(int argc, char **argv)
     const double Re = vm["Re"].as<double>();
     
     // Checking partitions match MPI
+    // Initialising variables for MPI to return
     int rank = 0;
     int size = 0;
 
@@ -72,6 +82,7 @@ int main(int argc, char **argv)
         return 0;
     }
     
+    // Displaying the chosen parameter values
     if (rank==0) {
         // Displaying the chosen parameters
         cout << "Chosen length of domain in x-direction = " << Lx << endl;
@@ -87,7 +98,7 @@ int main(int argc, char **argv)
     }
     
     // Performing checks on input variables
-    // Checking that the grid length is valid
+    // Checking that the grid length is valid (positive)
     if ((Lx <= 0) || (Ly <= 0)) {
         if (rank==0) {
             cout << "Error: The minimum length of the domain must be greater than 0." << endl;
@@ -95,7 +106,7 @@ int main(int argc, char **argv)
         return -1;
     }
     
-    // Checking that the discretisation is valid
+    // Checking that the discretisation is valid (more than 3 for second order central difference)
     if (Nx < 3 || Ny < 3) {
         if (rank==0) {
             cout << "Error: The minimum number of discretisation in the x or y direction is 3. Please choose a value greater than or equal to this." << endl;

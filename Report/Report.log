@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019) (preloaded format=pdflatex 2020.3.24)  24 MAR 2020 13:03
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019) (preloaded format=pdflatex 2020.3.24)  24 MAR 2020 21:27
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -208,7 +208,11 @@ Package: subfig 2005/06/28 ver: 1.3 subfig package
 \c@lotdepth=\count115
 \sf@top=\skip51
 \sf@bottom=\skip52
-) (./Report.aux)
+) (./Report.aux
+
+LaTeX Warning: Label `fig:contours' multiply defined.
+
+)
 \openout1 = `Report.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
@@ -226,7 +230,7 @@ LaTeX Font Info:    ... okay on input line 15.
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: subfig package v1.3 is loaded.
 Package caption Info: End \AtBeginDocument code.
-(/usr/local/texlive/2019/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+ (/usr/local/texlive/2019/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count116
 \scratchdimen=\dimen148
@@ -243,4 +247,172 @@ Package caption Info: End \AtBeginDocument code.
 Package: epstopdf-base 2016/05/15 v2.6 Base part for package epstopdf
 
 (/usr/local/texlive/2019/texmf-dist/tex/generic/oberdiek/infwarerr.sty
-Package: infware
+Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
+)
+(/usr/local/texlive/2019/texmf-dist/tex/latex/oberdiek/grfext.sty
+Package: grfext 2016/05/16 v1.2 Manage graphics extensions (HO)
+
+(/usr/local/texlive/2019/texmf-dist/tex/generic/oberdiek/kvdefinekeys.sty
+Package: kvdefinekeys 2016/05/16 v1.4 Define keys (HO)
+
+(/usr/local/texlive/2019/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
+)))
+(/usr/local/texlive/2019/texmf-dist/tex/latex/oberdiek/kvoptions.sty
+Package: kvoptions 2016/05/16 v3.12 Key value format for package options (HO)
+
+(/usr/local/texlive/2019/texmf-dist/tex/generic/oberdiek/kvsetkeys.sty
+Package: kvsetkeys 2016/05/16 v1.17 Key value parser (HO)
+
+(/usr/local/texlive/2019/texmf-dist/tex/generic/oberdiek/etexcmds.sty
+Package: etexcmds 2016/05/16 v1.6 Avoid name clashes with e-TeX commands (HO)
+
+(/usr/local/texlive/2019/texmf-dist/tex/generic/oberdiek/ifluatex.sty
+Package: ifluatex 2016/05/16 v1.4 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX not detected.
+))))
+(/usr/local/texlive/2019/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
+Package: pdftexcmds 2018/09/10 v0.29 Utility functions of pdfTeX for LuaTeX (HO
+)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+)
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+38.
+Package grfext Info: Graphics extension search list:
+(grfext)             [.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 456.
+
+(/usr/local/texlive/2019/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+))
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: <default>
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(63.59795pt, 487.0991pt, 63.59795pt)
+* v-part:(T,H,B)=(63.59795pt, 667.7741pt, 63.59795pt)
+* \paperwidth=614.295pt
+* \paperheight=794.96999pt
+* \textwidth=487.0991pt
+* \textheight=667.7741pt
+* \oddsidemargin=-8.67204pt
+* \evensidemargin=-8.67204pt
+* \topmargin=-45.67204pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=11.0pt
+* \footskip=30.0pt
+* \marginparwidth=59.0pt
+* \marginparsep=10.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+[1
+
+{/usr/local/texlive/2019/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+<../Images/u_vs_y.png, id=9, 562.2606pt x 421.575pt>
+File: ../Images/u_vs_y.png Graphic file (type png)
+<use ../Images/u_vs_y.png>
+Package pdftex.def Info: ../Images/u_vs_y.png  used on input line 38.
+(pdftex.def)             Requested size: 233.80548pt x 175.30415pt.
+<../Images/v_vs_x.png, id=10, 562.2606pt x 421.575pt>
+File: ../Images/v_vs_x.png Graphic file (type png)
+<use ../Images/v_vs_x.png>
+Package pdftex.def Info: ../Images/v_vs_x.png  used on input line 40.
+(pdftex.def)             Requested size: 233.80548pt x 175.30415pt.
+<../Images/w_100.png, id=11, 562.2606pt x 421.575pt>
+File: ../Images/w_100.png Graphic file (type png)
+<use ../Images/w_100.png>
+Package pdftex.def Info: ../Images/w_100.png  used on input line 48.
+(pdftex.def)             Requested size: 233.80548pt x 175.30415pt.
+<../Images/s_100.png, id=12, 562.2606pt x 421.575pt>
+File: ../Images/s_100.png Graphic file (type png)
+<use ../Images/s_100.png>
+Package pdftex.def Info: ../Images/s_100.png  used on input line 50.
+(pdftex.def)             Requested size: 233.80548pt x 175.30415pt.
+
+[1 <../Images/u_vs_y.png (PNG copy)> <../Images/v_vs_x.png (PNG copy)> <../Imag
+es/w_100.png (PNG copy)> <../Images/s_100.png (PNG copy)>]
+<../Images/lx1ly2.png, id=22, 376.7676pt x 395.5578pt>
+File: ../Images/lx1ly2.png Graphic file (type png)
+<use ../Images/lx1ly2.png>
+Package pdftex.def Info: ../Images/lx1ly2.png  used on input line 76.
+(pdftex.def)             Requested size: 219.1931pt x 230.12383pt.
+<../Images/lx2ly1.png, id=24, 493.3632pt x 247.6452pt>
+File: ../Images/lx2ly1.png Graphic file (type png)
+<use ../Images/lx2ly1.png>
+Package pdftex.def Info: ../Images/lx2ly1.png  used on input line 78.
+(pdftex.def)             Requested size: 267.90599pt x 134.47838pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 99--100
+
+ []
+
+<partition.jpg, id=25, 2378.8875pt x 341.275pt>
+File: partition.jpg Graphic file (type jpg)
+<use partition.jpg>
+Package pdftex.def Info: partition.jpg  used on input line 105.
+(pdftex.def)             Requested size: 487.0991pt x 69.8785pt.
+[2 <../Images/lx1ly2.png> <../Images/lx2ly1.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 110--111
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 112--113
+
+ []
+
+<vorticity.jpg, id=33, 3472.975pt x 767.86874pt>
+File: vorticity.jpg Graphic file (type jpg)
+<use vorticity.jpg>
+Package pdftex.def Info: vorticity.jpg  used on input line 118.
+(pdftex.def)             Requested size: 487.0991pt x 107.68835pt.
+[3 <./partition.jpg> <./vorticity.jpg>] (./Report.aux)
+
+LaTeX Warning: There were multiply-defined labels.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 4285 strings out of 492616
+ 63928 string characters out of 6129481
+ 136373 words of memory out of 5000000
+ 8132 multiletter control sequences out of 15000+600000
+ 17281 words of font info for 60 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 41i,9n,49p,765b,412s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
+></usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb
+></usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb>
+</usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><
+/usr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></u
+sr/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr
+/local/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/l
+ocal/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/loc
+al/texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/
+texlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/t
+exlive/2019/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
+Output written on Report.pdf (4 pages, 930432 bytes).
+PDF statistics:
+ 72 PDF objects out of 1000 (max. 8388607)
+ 44 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 41 words of extra memory for PDF output out of 10000 (max. 10000000)
+
