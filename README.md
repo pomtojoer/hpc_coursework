@@ -151,6 +151,7 @@ This explains the purpose of each file and folder in this folder
 * [assignment.pdf](./assignment.pdf) - HPC coursework assignment brief
 * [README.md](./README.md) - README markdown file
 * [README.pdf](./README.pdf) - PDF version of the README file
+* [repository.log](./repository.log) - Git repository log file
 * [LidDrivenCavitySolver.cpp](./LidDrivenCavitySolver.cpp) - C++ file that accepts options for the solver and then sets up the solver for the lid-driven cavity problem.
 * [LidDrivenCavity.cpp](./LidDrivenCavity.cpp) - C++ file that implements the serial and parallel LidDrivenCavity class member functions
 * [Poisson2DSolver.cpp](./Poisson2DSolver.cpp) - C++ file that implements the serial and parallel Poisson2DSolver class member functions
