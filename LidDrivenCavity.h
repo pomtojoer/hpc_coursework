@@ -1,3 +1,11 @@
+/**
+    High Performane Computing Coursework
+    LidDrivenCavity.h
+    Purpose: Defines the LidDrivenCavity class.
+
+    @author Sean Chai
+    @version 1.0 23/03/20
+*/
 #ifndef LIDDRIVENCAVITY_H
 #define LIDDRIVENCAVITY_H
 #pragma once
@@ -8,9 +16,11 @@ using namespace std;
 class LidDrivenCavity
 {
 public:
+    // Constructor Destructor
     LidDrivenCavity();
     ~LidDrivenCavity();
 
+    // Setting functions
     void SetDomainSize(double xlen, double ylen);
     void SetGridSize(unsigned int nx, unsigned int ny);
     void SetPartitionSize(unsigned int px, unsigned int py);
@@ -19,7 +29,8 @@ public:
     void SetReynoldsNumber(double Re);
     void SetGridSpacing(double deltax, double deltay);
     void SetMPIConfig();
-
+    
+    // Main class functions
     void Initialise();
     void Integrate();
     void GeneratePlotData();

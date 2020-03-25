@@ -1,3 +1,11 @@
+/**
+    High Performane Computing Coursework
+    Poisson2DSolver.h
+    Purpose: Defines the Poisson2DSolver class.
+
+    @author Sean Chai
+    @version 1.0 23/03/20
+*/
 #ifndef POISSON2DSOLVER_H
 #define POISSON2DSOLVER_H
 #pragma once
@@ -14,18 +22,26 @@ using namespace std;
 class Poisson2DSolver
 {
 public:
+    // Class constructor and destructor
     Poisson2DSolver();
     ~Poisson2DSolver();
     
+    // Generation functions
     void GenerateScalapackMatrixAHat();
     void GenerateLapackMatrixAHat();
+    
+    // Get functions
     double* GetScalapackMatrixAHat();
-    void Updatex(double* xVec);
     int GetScalapackMatrixAHatNx();
     int GetScalapackMatrixAHatNy();
+    
+    // Set functions
     void SetScalapackMatrixAHat(double* ahat, int ahatnx, int ahatny);
     void SetVariables(int nx, int ny, double alphaVar, double betaVar, double gammaVar);
     void SetVectors(double* xhat, double* bVec);
+    void Updatex(double* xVec);
+    
+    // Prefactor and Solve functions
     void InitialiseScalapack(int px, int py);
     void PrefactorMatrixAHatParallel();
     void SolveParallel();
@@ -33,14 +49,17 @@ public:
     void SolveSerial();
     
 private:
+    // [A]{x} = {b} matrices and vectors
     double* AHat = nullptr;
     double* xHat = nullptr;
     double* bHat = nullptr;
     
+    // Main and superdiagonals of A
     double alpha;
     double beta;
     double gamma;
     
+    // Matrix dimensions
     int Nx;
     int Ny;
     int bHatNx;
@@ -53,7 +72,7 @@ private:
     int mpisize;
     
     // Scalapack variables
-    // BLACS
+    // BLACS varibles
     int Px;
     int Py;
     int mype;
@@ -64,7 +83,7 @@ private:
     int myrow;
     int mycol;
     
-    // Solve
+    // Solve variables
     int m;
     int n;
     int nb;
@@ -74,6 +93,7 @@ private:
     int desca[7];
     int lda;
     
+    // Solve working arrays
     double* prefactoredAHat = nullptr;
     int* ipiv = nullptr;
     double* af = nullptr;
