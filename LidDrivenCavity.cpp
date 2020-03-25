@@ -450,11 +450,11 @@ void LidDrivenCavity::Integrate()
     // Initialising a variable to keep track of the current time during the solve
     double tnow = 0.0;
     do {
-        // Output to the terminal the current percentage completion
-        if (MPIRank==0) {
-            string strout = "\r" + to_string((int)ceil((tnow/T*100))) + "% completed";
-            cout << strout;
-        }
+//        // Output to the terminal the current percentage completion
+//        if (MPIRank==0) {
+//            string strout = "\r" + to_string((int)ceil((tnow/T*100))) + "% completed";
+//            cout << strout;
+//        }
         
 //        if (MPIRank==0) {
 //            cout << "At initial" << endl;
