@@ -158,7 +158,7 @@ int main(int argc, char **argv)
     // Running Solver
     solver->Initialise();
     solver->Integrate();
-//    solver->GeneratePlotData();
+    solver->GeneratePlotData();
     
     // Finalise MPI.
     MPI_Finalize();

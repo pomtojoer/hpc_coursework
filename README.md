@@ -146,7 +146,36 @@ A seperate MATLAB implementation of the lid-driven cavity solver is included in 
 
 ## Directory Structure
 
-This explains the purpose of each file and folder in this 
+This explains the purpose of each file and folder in this folder
+
+* [assignment.pdf](./assignment.pdf) - HPC coursework assignment brief
+* [README.md](./README.md) - README markdown file
+* [README.pdf](./README.pdf) - PDF version of the README file
+* [LidDrivenCavitySolver.cpp](./LidDrivenCavitySolver.cpp) - C++ file that accepts options for the solver and then sets up the solver for the lid-driven cavity problem.
+* [LidDrivenCavity.cpp](./LidDrivenCavity.cpp) - C++ file that implements the serial and parallel LidDrivenCavity class member functions
+* [Poisson2DSolver.cpp](./Poisson2DSolver.cpp) - C++ file that implements the serial and parallel Poisson2DSolver class member functions
+* [LidDrivenCavity.h](./LidDrivenCavity.h) - Header file for the LidDrivenCavity class
+* [Poisson2DSolver.h](./Poisson2DSolver.h) - Header file for the Poisson2DSolver class
+* [GeneratePlots.m](./GeneratePlots.m) - MATLAB script to generate plots from the output files of the program
+* [GenerateScalePlot.m](./GeneratePlot.m) - MATLAB script to generate scale plot from the output file (executionTime.txt) of ./TestSpeed.sh
+* [LidDrivenCavitySolver.m](./LidDrivenCavitySolver.m) - MATLAB implementation of the serial lid driven cavity solver
+* [Makefile](./Makefile) - File to help in the compilation of the executable, cleaning and testing
+* [RunSolver.sh](./RunSolver.sh) - Shell script to run solver to produce required data for the report
+* [TestSpeed.sh](./TestSpeed.sh) - Shell script to run solver for different number of processes and time it
+* [Data/](./Data/) - Folder that contains the output data of the solver
+* [Images/](./Images/) - Folder that contains the plots produced by MATLAB script
+* [ReportFiles/](./ReportFiles/) - LaTEX file to compile report
+
+The following are the output files from running different scripts
+
+* **LidDrivenCavitySolver.o** - Object file of LidDrivenCavitySolver.cpp from running make
+* **LidDrivenCavity.o** - Object file of LidDrivenCavity.cpp from running make
+* **Poisson2DSolver.o** - Object file of Poisson2DSolver.cpp from running make
+* **./Solve** - Executable linking LidDrivenCavitySolver.o, LidDrivenCavity.o and Poisson2DSolver.o
+* **executionTime.txt** - Text file containing run times for different number of processes. Produced from running ./TestSpeed.sh
+* **./Data/*.txt** - Text files containing the data produced from running ./Solve.
+* **./Images/*.png** - Image files used in the report produced from running the MATLAB script GeneratePlots.m.
+* **./ReportFiles/*** - Files produced when compiling Report.tex.
 
 
 
