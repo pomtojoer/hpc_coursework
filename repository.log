@@ -1,0 +1,627 @@
+commit 8067a757956be6756d9112970c9544eee130468e
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Wed Mar 25 16:15:59 2020 +0800
+
+    added comments to header files
+
+M	LidDrivenCavity.h
+M	Poisson2DSolver.h
+
+commit bd0e110253ff3f7fa1e8adbc643a011b8d5939b2
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Wed Mar 25 15:59:33 2020 +0800
+
+    added report pdf
+
+A	Report.pdf
+
+commit af08ca619837aea1455c3dc608022e379a68bc4b
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Wed Mar 25 15:58:57 2020 +0800
+
+    finalised report
+
+M	Data/1_1_161_161_100_data.txt
+M	Data/1_1_161_161_400_data.txt
+M	GeneratePlots.m
+A	GenerateScalePlot.m
+M	Images/collated.png
+M	Images/s_100.png
+A	Images/scaleplot.png
+M	Images/u_vs_y.png
+M	Images/v_vs_x.png
+M	Images/w_100.png
+M	LidDrivenCavitySolver.cpp
+M	README.md
+M	README.pdf
+A	ReportFiles/.DS_Store
+A	ReportFiles/Report.aux
+A	ReportFiles/Report.log
+A	ReportFiles/Report.pdf
+A	ReportFiles/Report.synctex.gz
+A	ReportFiles/Report.tex
+A	ReportFiles/Report.toc
+A	ReportFiles/partition copy.jpg
+A	ReportFiles/partition.jpg
+A	ReportFiles/vorticity.jpg
+A	TestSpeed.sh
+M	assignment.pdf
+
+commit c14ae5854fd673639151e2bd2ca36dbf0e6f9410
+Author: Sean Chai <jsc4017@spitfire.ae.ic.ac.uk>
+Date:   Wed Mar 25 04:23:17 2020 +0000
+
+    added executio time script
+
+M	Data/1_1_161_161_100_data.txt
+M	Data/1_1_161_161_400_data.txt
+A	Data/1_1_51_51_100_data.txt
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.o
+M	LidDrivenCavitySolver.cpp
+M	LidDrivenCavitySolver.o
+M	Makefile
+M	Solve
+A	executionTime.txt
+A	profileScript
+
+commit 67730b936a60451654ef4fad1973f8663e834049
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Tue Mar 24 18:21:49 2020 +0000
+
+    updated plots
+
+M	Data/1_1_161_161_1000_data.txt
+M	Data/1_1_161_161_3200_data.txt
+M	GeneratePlots.m
+M	Images/collated.png
+M	Images/s_100.png
+M	Images/u_vs_y.png
+M	Images/v_vs_x.png
+M	Images/w_100.png
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.o
+M	LidDrivenCavitySolver.o
+M	Poisson2DSolver.o
+M	Solve
+
+commit 892f1f64901855127ad0edf8bcce4b5a29a2813c
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Wed Mar 25 01:12:12 2020 +0800
+
+    added comments and editted matlab plotting script
+
+M	GeneratePlots.m
+M	GeneratePlots.m~
+D	Images/._lx1ly2.png
+D	Images/._lx2ly1.png
+D	Images/._s_100.png
+D	Images/._u_vs_x.png
+D	Images/._v_vs_y.png
+D	Images/._w_100.png
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	LidDrivenCavity.cpp
+M	LidDrivenCavitySolver.cpp
+M	LidDrivenCavitySolver.m
+M	Makefile
+M	Poisson2DSolver.cpp
+M	Report/Report.aux
+M	Report/Report.log
+M	Report/Report.pdf
+D	Report/Report.synctex(busy)
+A	Report/Report.synctex.gz
+M	Report/Report.tex
+M	Report/Report.toc
+A	Report/partition copy.jpg
+A	Report/partition.jpg
+A	Report/vorticity.jpg
+M	RunSolver.sh
+
+commit c1213456febe72de6f8b58ef20ac3dbe4d0a99bf
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Tue Mar 24 05:30:40 2020 +0000
+
+    finalised plots
+
+A	Data/1_1_161_161_1000_data.txt
+A	Data/1_1_161_161_100_data.txt
+A	Data/1_1_161_161_3200_data.txt
+A	Data/1_1_161_161_400_data.txt
+A	Data/1_2_161_161_100_data.txt
+A	Data/2_1_161_161_100_data.txt
+M	Images/collated.png
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	Images/s_100.png
+M	Images/u_vs_y.png
+M	Images/v_vs_x.png
+M	Images/w_100.png
+
+commit c93af01cef6d9aa11c23ecb8f5fb400170dd0d7c
+Merge: 4d20c25 1bd4a7a
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Tue Mar 24 13:12:10 2020 +0800
+
+    Merge branch 'master' of https://github.com/pomtojoer/hpc_coursework
+
+commit 4d20c25879ac4a9835e060f4e180cc2f225c68f3
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Tue Mar 24 13:05:58 2020 +0800
+
+    added README
+
+D	Data/1_1_161_161_1000_data.txt
+D	Data/1_1_161_161_100_data.txt
+D	Data/1_1_161_161_3200_data.txt
+D	Data/1_1_161_161_400_data.txt
+D	Data/1_2_161_161_100_data.txt
+D	Data/2_1_161_161_100_data.txt
+D	Images/collated.png
+D	Images/lx1ly2.png
+D	Images/lx2ly1.png
+D	Images/s_100.png
+D	Images/u_vs_y.png
+D	Images/v_vs_x.png
+D	Images/w_100.png
+M	LidDrivenCavitySolver.cpp
+A	LidDrivenCavitySolver.m
+M	README.md
+A	README.pdf
+A	Report/.DS_Store
+M	Report/Report.aux
+D	Report/Report.dvi
+M	Report/Report.log
+M	Report/Report.pdf
+A	Report/Report.synctex(busy)
+D	Report/Report.synctex.gz
+M	Report/Report.tex
+M	Report/Report.toc
+
+commit 1bd4a7abb59d57061898401019951bc3ddf9df2d
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Tue Mar 24 05:04:19 2020 +0000
+
+    cleaned up
+
+M	Images/collated.png
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	Images/s_100.png
+M	Images/u_vs_y.png
+M	Images/v_vs_x.png
+M	Images/w_100.png
+
+commit f60c236de3eedd5ba758fa108c017216dedd6b32
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Mon Mar 23 16:49:54 2020 +0000
+
+    added colours to plot
+
+M	Data/1_1_161_161_1000_data.txt
+M	Data/1_1_161_161_3200_data.txt
+M	GeneratePlots.m
+M	Images/collated.png
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	Images/s_100.png
+D	Images/u_vs_x.png
+M	Images/u_vs_y.png
+M	Images/v_vs_x.png
+D	Images/v_vs_y.png
+M	Images/w_100.png
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.o
+M	Makefile
+M	Poisson2DSolver.cpp
+M	RunSolver.sh
+M	Solve
+
+commit 589dbfe8ccc9564c06c51e57012b30df9f491417
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Mon Mar 23 22:42:53 2020 +0800
+
+    editted matlab plottin script
+
+M	GeneratePlots.m
+A	Images/collated.png
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	Images/s_100.png
+A	Images/u_vs_y.png
+A	Images/v_vs_x.png
+M	Images/w_100.png
+M	MatlabTest/LidDrivenCavitySolver7.m
+M	MatlabTest/LidDrivenCavitySolver7.m~
+
+commit d3898c26d2a2fc151ba3779febf53604b9c89a08
+Merge: 18a1833 6618f3f
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Mon Mar 23 14:16:00 2020 +0000
+
+    Merge branch 'master' of https://github.com/pomtojoer/hpc_coursework
+
+commit 18a1833e0a4642540f93e7994b025e379e39d198
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Mon Mar 23 14:15:17 2020 +0000
+
+    fixed nx =/= ny issues
+
+A	Data/1_1_161_161_1000_data.txt
+A	Data/1_1_161_161_100_data.txt
+A	Data/1_1_161_161_3200_data.txt
+A	Data/1_1_161_161_400_data.txt
+A	Data/1_2_161_161_100_data.txt
+A	Data/2_1_161_161_100_data.txt
+A	Images/._lx1ly2.png
+A	Images/._lx2ly1.png
+A	Images/._s_100.png
+A	Images/._u_vs_x.png
+A	Images/._v_vs_y.png
+A	Images/._w_100.png
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	Images/s_100.png
+M	Images/u_vs_x.png
+M	Images/v_vs_y.png
+M	Images/w_100.png
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.o
+M	LidDrivenCavitySolver.o
+M	Poisson2DSolver.cpp
+M	Poisson2DSolver.o
+M	RunSolver.sh
+M	Solve
+
+commit 6618f3fbe4957b6227185556bcf86b919ffa19b9
+Author: pomtojoer <pomtojoerkthu@hotmail.com>
+Date:   Mon Mar 23 12:15:23 2020 +0000
+
+    added report
+
+A	Report/Report.aux
+A	Report/Report.dvi
+A	Report/Report.log
+A	Report/Report.pdf
+A	Report/Report.synctex.gz
+A	Report/Report.tex
+A	Report/Report.toc
+
+commit aeada91ae8189ad79d540d6424862b93a948a855
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Mon Mar 23 00:07:13 2020 +0800
+
+    editted plots to scale
+
+M	GeneratePlots.m
+M	GeneratePlots.m~
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	Images/s_100.png
+M	Images/u_vs_x.png
+M	Images/v_vs_y.png
+M	Images/w_100.png
+M	LidDrivenCavity.cpp
+M	MatlabTest/LidDrivenCavitySolver7.m
+
+commit 93444e877bd0a272fc1d3bb8e8c30dff942a61cf
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Sun Mar 22 23:20:21 2020 +0800
+
+    fixed matlab plotting script
+
+M	GeneratePlots.m
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	Images/s_100.png
+M	Images/u_vs_x.png
+M	Images/v_vs_y.png
+M	Images/w_100.png
+
+commit 6fc8f15475ea00416e9c7606cb7732bd57b15461
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Sun Mar 22 15:15:20 2020 +0000
+
+    updated plots
+
+M	1_1_161_161_3200_data.txt
+M	1_2_161_161_100_data.txt
+M	2_1_161_161_100_data.txt
+M	GeneratePlots.m
+M	Images/lx1ly2.png
+M	Images/lx2ly1.png
+M	Images/s_100.png
+M	Images/u_vs_x.png
+M	Images/v_vs_y.png
+M	Images/w_100.png
+M	LidDrivenCavity.cpp
+M	RunSolver.sh
+
+commit b4a868f153e8f602b1b6afdfd754c30856af248d
+Merge: bc11a61 a3934bd
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Sun Mar 22 22:50:57 2020 +0800
+
+    Merge branch 'master' of https://github.com/pomtojoer/hpc_coursework
+
+commit bc11a61b7ab7f4e909b3aadf292446646a39a690
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Sun Mar 22 22:50:44 2020 +0800
+
+    added matlab plotter
+
+A	GeneratePlots.m
+A	GeneratePlots.m~
+A	Images/lx1ly2.png
+A	Images/lx2ly1.png
+A	Images/s_100.png
+A	Images/u_vs_x.png
+A	Images/v_vs_y.png
+A	Images/w_100.png
+M	MatlabTest/LidDrivenCavitySolver7.m
+M	MatlabTest/LidDrivenCavitySolver7.m~
+
+commit a3934bde6827f01d34a8fe00b3061993a22fe7f7
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Sun Mar 22 14:49:32 2020 +0000
+
+    Fixed Lx Ly bug
+
+M	LidDrivenCavity.cpp
+
+commit 1214cd5557f9b7bc30366609510458db53758b0e
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Sun Mar 22 08:21:18 2020 +0000
+
+    added generated files
+
+A	1_1_161_161_1000_data.txt
+A	1_1_161_161_100_data.txt
+A	1_1_161_161_3200_data.txt
+A	1_1_161_161_400_data.txt
+A	1_2_161_161_100_data.txt
+A	2_1_161_161_100_data.txt
+M	RunSolver.sh
+A	data.txt
+
+commit ca52698307c57e23615d0375307c65e02593884b
+Merge: f740bd7 df96a3c
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Sun Mar 22 04:44:57 2020 +0000
+
+    Merge branch 'master' of https://github.com/pomtojoer/hpc_coursework
+
+commit f740bd7aeed842238ae18888c914a6edf338a5e3
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Sun Mar 22 04:44:21 2020 +0000
+
+    added test script
+
+A	1_1_5_5_100_data.txt
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+M	LidDrivenCavitySolver.cpp
+A	MatlabTest/._LidDrivenCavitySolver.m
+A	MatlabTest/._LidDrivenCavitySolver2.m
+A	MatlabTest/._LidDrivenCavitySolver3.m
+A	MatlabTest/._LidDrivenCavitySolver4.m
+A	MatlabTest/._LidDrivenCavitySolver5.m
+A	MatlabTest/._output.jpg
+M	Poisson2DSolver.cpp
+M	Poisson2DSolver.h
+A	RunSolver.sh
+
+commit df96a3c9b7ba7994dd96cd603eb7879add17ddc7
+Author: Sean Chai <seanchai@seans-mbp.lan>
+Date:   Sun Mar 22 11:32:16 2020 +0800
+
+    adding matlab
+
+A	MatlabTest/LidDrivenCavitySolver6.m
+A	MatlabTest/LidDrivenCavitySolver6.m~
+A	MatlabTest/LidDrivenCavitySolver7.m
+A	MatlabTest/LidDrivenCavitySolver7.m~
+A	MatlabTest/output1.jpg
+A	MatlabTest/testplot.m
+A	MatlabTest/testplot.m~
+
+commit f764b4a802bcaf1f8a88fa89e3c5d7ce0d9dfd11
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Wed Mar 18 23:53:01 2020 +0000
+
+    implemented parallel solve
+
+M	LidDrivenCavity.cpp
+M	Poisson2DSolver.cpp
+M	Poisson2DSolver.h
+
+commit 2872324dc0f48dd9efdc4fcd3660ccf4ac177942
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Wed Mar 18 00:14:27 2020 +0000
+
+    added scalapack solver. needs working on
+
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+M	LidDrivenCavity.o
+M	LidDrivenCavitySolver.cpp
+M	LidDrivenCavitySolver.o
+M	Makefile
+M	Poisson2DSolver.cpp
+M	Poisson2DSolver.h
+M	Poisson2DSolver.o
+M	Solve
+
+commit f0037e9c1c0bb704a0775ac3ca098c57436191c9
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Tue Mar 17 18:44:59 2020 +0000
+
+    fixed bad alloc bug
+
+M	LidDrivenCavity.cpp
+M	Poisson2DSolver.cpp
+M	Poisson2DSolver.h
+
+commit 90bb290b2ea8507da32dd262cb9a59d9b4da6634
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Tue Mar 17 14:24:24 2020 +0000
+
+    MPI implementation up till step 3
+
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+M	LidDrivenCavity.o
+M	LidDrivenCavitySolver.o
+M	Poisson2DSolver.cpp
+M	Poisson2DSolver.h
+M	Poisson2DSolver.o
+M	Solve
+
+commit 0ebabccb9e3541725407bc3f88dfabbd33cbeb81
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Mon Mar 16 19:17:04 2020 +0000
+
+    solved blocking problem in SetMPIConfig
+
+M	LidDrivenCavity.cpp
+
+commit 27df9c5603bdbc4717ae29b81841a8beb7c717a9
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Mon Mar 16 18:39:06 2020 +0000
+
+    Added MPI to step 2
+
+A	LidDrivenCavity copy.cpp
+A	LidDrivenCavity copy.h
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+M	LidDrivenCavitySolver.cpp
+M	Makefile
+M	Poisson2DSolver.cpp
+M	Poisson2DSolver.h
+
+commit af32b3cd2559f147e6aa44712b1cf2b535625dff
+Author: Sean Chai <seanchai@Seans-MBP.fritz.box>
+Date:   Fri Mar 13 02:54:30 2020 +0000
+
+    added solved up to step 3. implementing 4 in class
+
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+M	LidDrivenCavity.o
+M	LidDrivenCavitySolver.cpp
+M	LidDrivenCavitySolver.o
+M	Makefile
+M	MatlabTest/LidDrivenCavitySolver2.m
+A	MatlabTest/LidDrivenCavitySolver2.m~
+M	MatlabTest/LidDrivenCavitySolver3.m
+M	MatlabTest/LidDrivenCavitySolver4.m
+M	MatlabTest/LidDrivenCavitySolver4.m~
+A	MatlabTest/LidDrivenCavitySolver5.m
+A	MatlabTest/LidDrivenCavitySolver5.m~
+A	MatlabTest/output.jpg
+A	Poisson2DSolver.cpp
+A	Poisson2DSolver.h
+A	Poisson2DSolver.o
+M	Solve
+
+commit d903d61bac3ec03e0166f6db5b4e33c60da117bf
+Author: Sean Chai <seanchai@Seans-MBP.fritz.box>
+Date:   Thu Mar 12 18:45:41 2020 +0000
+
+    finished step 3
+
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+M	LidDrivenCavitySolver.cpp
+M	MatlabTest/LidDrivenCavitySolver4.m
+M	MatlabTest/LidDrivenCavitySolver4.m~
+
+commit d73d7f3f46f85ccc2208c2f484dd8a340be775e7
+Author: Sean Chai <seanchai@dyn3152-70.wlan.ic.ac.uk>
+Date:   Thu Mar 12 10:57:41 2020 +0000
+
+    completed up to step 2
+
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+M	LidDrivenCavitySolver.cpp
+M	Makefile
+A	MatlabTest/LidDrivenCavitySolver.m
+A	MatlabTest/LidDrivenCavitySolver.m~
+A	MatlabTest/LidDrivenCavitySolver2.m
+A	MatlabTest/LidDrivenCavitySolver3.m
+A	MatlabTest/LidDrivenCavitySolver3.m~
+A	MatlabTest/LidDrivenCavitySolver4.m
+A	MatlabTest/LidDrivenCavitySolver4.m~
+
+commit 573c54d061314d776e1716754244eb55baded6c0
+Author: Sean Chai <seanchai@Seans-MBP.fritz.box>
+Date:   Mon Mar 9 16:11:03 2020 +0000
+
+    added fuctions to implement bc
+
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+M	LidDrivenCavitySolver.cpp
+A	Test boost/.DS_Store
+A	Test boost/a.out
+A	Test boost/main.cpp
+
+commit 9ac7cc234aaa5eec74f8dbe4d943531add8c9e28
+Author: Sean Chai <seanchai@dyn3157-242.wlan.ic.ac.uk>
+Date:   Mon Mar 9 11:00:44 2020 +0000
+
+    implemented set functions and makefile
+
+M	LidDrivenCavity.cpp
+M	LidDrivenCavity.h
+A	LidDrivenCavity.o
+M	LidDrivenCavitySolver.cpp
+A	LidDrivenCavitySolver.o
+A	Makefile
+A	Solve
+
+commit 119a6961b58a73cd6d5b0281bab6400a0d11f920
+Author: Sean Chai <seanchai@Seans-MBP.fritz.box>
+Date:   Fri Mar 6 12:46:28 2020 +0000
+
+    test commit
+
+M	README.md
+A	TestSolver.sh
+
+commit c1f176d97dc16baddeb1d36c9e5cf39219ab3079
+Author: Sean Chai <jsc4017@hurricane.ae.ic.ac.uk>
+Date:   Fri Mar 6 12:43:53 2020 +0000
+
+    added boost to to solver
+
+M	LidDrivenCavitySolver.cpp
+A	a.out
+
+commit 72b2bfe63120ff10df3f05fa8832e5ba32dac8ca
+Author: Sean Chai <seanchai@dyn3159-78.wlan.ic.ac.uk>
+Date:   Fri Feb 7 15:11:03 2020 +0000
+
+    added assignment pdf
+
+A	assignment.pdf
+
+commit c64e570e47dc0182e40805a217be723bb448af6a
+Author: Sean Chai <seanchai@dyn3159-78.wlan.ic.ac.uk>
+Date:   Fri Feb 7 15:07:54 2020 +0000
+
+    Added files from Blackboard
+
+A	LidDrivenCavity.cpp
+A	LidDrivenCavity.h
+A	LidDrivenCavitySolver.cpp
+
+commit e4645fc7f046e919e63a20df15924eeaaf6bebab
+Author: pomtojoer <pomtojoer@users.noreply.github.com>
+Date:   Fri Feb 7 14:22:16 2020 +0000
+
+    Initial commit
+
+A	README.md
